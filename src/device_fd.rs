@@ -22,10 +22,6 @@ pub struct DeviceFdMap {
 }
 
 impl DeviceFdMap {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
     pub fn insert(&mut self, device_fd: DeviceFd) {
         let mut i = 0;
         while i < self.values.len() {
@@ -63,7 +59,7 @@ mod tests {
 
     #[test]
     fn test_insert() {
-        let mut map = DeviceFdMap::new();
+        let mut map = DeviceFdMap::default();
         map.insert(DeviceFd::new(1, Path::new("p1")));
         map.insert(DeviceFd::new(2, Path::new("p2")));
         assert_eq!(map.len(), 2);
@@ -96,7 +92,7 @@ mod tests {
 
     #[test]
     fn test_get_by_path() {
-        let mut map = DeviceFdMap::new();
+        let mut map = DeviceFdMap::default();
         map.insert(DeviceFd::new(1, Path::new("p1")));
         assert_eq!(map.len(), 1);
         assert_eq!(
@@ -108,7 +104,7 @@ mod tests {
 
     #[test]
     fn test_remove_by_fd() {
-        let mut map = DeviceFdMap::new();
+        let mut map = DeviceFdMap::default();
         map.insert(DeviceFd::new(1, Path::new("p1")));
         map.insert(DeviceFd::new(2, Path::new("p2")));
         assert_eq!(map.remove_by_fd(1), Some(DeviceFd::new(1, Path::new("p1"))));

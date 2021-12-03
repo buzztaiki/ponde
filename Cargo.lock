@@ -115,6 +115,7 @@ dependencies = [
  "input",
  "libc",
  "nix",
+ "udev",
 ]
 
 [[package]]
