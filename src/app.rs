@@ -1,4 +1,3 @@
-use std::io;
 use std::os::unix::prelude::*;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
@@ -10,6 +9,7 @@ use input::{Libinput, LibinputInterface};
 use crate::config::Config;
 use crate::default_libinput_interface::DefaultLibinputInterface;
 use crate::device_fd::{DeviceFd, DeviceFdMap};
+use crate::errors::Error;
 use crate::sink_device::SinkDevice;
 
 type DeviceFdMapPtr = Arc<Mutex<DeviceFdMap>>;
@@ -30,7 +30,7 @@ impl<'a> App<'a> {
         }
     }
 
-    pub fn event_loop(&mut self) -> io::Result<()> {
+    pub fn event_loop(&mut self) -> Result<(), Error> {
         let mut libinput =
             Libinput::new_with_udev(AppLibinputInterface::new(self.device_fd_map.clone()));
         libinput
@@ -40,32 +40,32 @@ impl<'a> App<'a> {
         loop {
             libinput.dispatch().unwrap();
             for event in &mut libinput {
-                self.handle_event(&event)?;
+                if let Err(e) = self.handle_event(&event) {
+                    eprintln!(
+                        "failed to handle event: device={}: {}",
+                        event.device().name(),
+                        e
+                    );
+                }
             }
         }
     }
 
-    fn handle_event(&mut self, event: &Event) -> io::Result<()> {
+    fn handle_event(&mut self, event: &Event) -> Result<(), Error> {
         let device = &event.device();
+        let _device_config = match self.config.matched_device(&device.into()) {
+            Some(x) => x,
+            None => return Ok(()),
+        };
+
         match event {
             Event::Device(DeviceEvent::Added(_)) => {
-                let _device_config = match self.config.matched_device(&device.into()) {
-                    Some(x) => x,
-                    None => {
-                        eprintln!("unmatched device: {}", device.name());
-                        return Ok(());
-                    }
-                };
+                let udev_device = udev_device(device)
+                    .ok_or_else(|| Error::Error("failed to get udev_device".to_string()))?;
 
-                let udev_device = match udev_device(device) {
-                    Some(x) => x,
-                    None => return Ok(()),
-                };
-
-                let devnode = match udev_device.devnode() {
-                    Some(x) => x,
-                    None => return Ok(()),
-                };
+                let devnode = udev_device
+                    .devnode()
+                    .ok_or_else(|| Error::Error("failed to get devnode".to_string()))?;
 
                 {
                     let map = self.device_fd_map.lock().unwrap();
@@ -73,20 +73,10 @@ impl<'a> App<'a> {
                 }
             }
             Event::Pointer(ev) => {
-                let sink_event = match ev.try_into() {
-                    Ok(x) => x,
-                    Err(e) => {
-                        eprintln!("failed to convert from {:?} to SinkEvent: {:?}", ev, e);
-                        return Ok(());
-                    },
-                };
-
-                if let Err(e) = self.sink_device.send_event(&sink_event) {
-                    eprintln!("failed to send event: {:?}", e);
-                    return Ok(());
-                }
+                let sink_event = ev.try_into()?;
+                self.sink_device.send_event(&sink_event)?;
             }
-            _ => eprintln!("unexpected event: {:?}", event),
+            _ => return Err(Error::Error(format!("unexpected event: {:?}", event))),
         }
         Ok(())
     }

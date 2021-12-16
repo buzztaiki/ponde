@@ -8,6 +8,7 @@ mod app;
 mod config;
 mod default_libinput_interface;
 mod device_fd;
+mod errors;
 mod sink_device;
 mod sink_event;
 
