@@ -10,20 +10,23 @@ use input::{Libinput, LibinputInterface};
 use crate::config::Config;
 use crate::default_libinput_interface::DefaultLibinputInterface;
 use crate::device_fd::{DeviceFd, DeviceFdMap};
+use crate::sink_device::SinkDevice;
 
 type DeviceFdMapPtr = Arc<Mutex<DeviceFdMap>>;
 
 pub struct App<'a> {
     config: &'a Config,
     device_fd_map: DeviceFdMapPtr,
+    sink_device: SinkDevice,
 }
 
 impl<'a> App<'a> {
-    pub fn new(config: &'a Config) -> Self {
+    pub fn new(config: &'a Config, sink_device: SinkDevice) -> Self {
         let device_fd_map = Arc::new(Mutex::new(DeviceFdMap::default()));
         Self {
             config,
             device_fd_map,
+            sink_device,
         }
     }
 
@@ -67,6 +70,20 @@ impl<'a> App<'a> {
                 {
                     let map = self.device_fd_map.lock().unwrap();
                     eprintln!("device_fd: {:?}", map.get_by_path(devnode));
+                }
+            }
+            Event::Pointer(ev) => {
+                let sink_event = match ev.try_into() {
+                    Ok(x) => x,
+                    Err(e) => {
+                        eprintln!("failed to convert from {:?} to SinkEvent: {:?}", ev, e);
+                        return Ok(());
+                    },
+                };
+
+                if let Err(e) = self.sink_device.send_event(&sink_event) {
+                    eprintln!("failed to send event: {:?}", e);
+                    return Ok(());
                 }
             }
             _ => eprintln!("unexpected event: {:?}", event),

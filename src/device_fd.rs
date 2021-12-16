@@ -48,7 +48,8 @@ impl DeviceFdMap {
         None
     }
 
-    pub fn len(&self) -> usize {
+    #[cfg(test)]
+    fn len(&self) -> usize {
         self.values.len()
     }
 }
