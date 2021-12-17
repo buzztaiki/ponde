@@ -68,8 +68,11 @@ impl<'a> App<'a> {
                     .ok_or_else(|| Error::Error("failed to get devnode".to_string()))?;
 
                 {
-                    let map = self.device_fd_map.lock().unwrap();
-                    eprintln!("device_fd: {:?}", map.get_by_path(devnode));
+                    let mut map = self.device_fd_map.lock().unwrap();
+                    let device_fd = map.get_by_path_mut(devnode).ok_or_else(|| {
+                        Error::Error(format!("failed to get device_fd of {}", devnode.display()))
+                    })?;
+                    device_fd.grab()?;
                 }
             }
             Event::Pointer(ev) => {

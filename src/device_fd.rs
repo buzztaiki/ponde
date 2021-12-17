@@ -1,5 +1,13 @@
+use std::io;
 use std::os::unix::prelude::RawFd;
 use std::path::Path;
+
+use nix::ioctl_write_int;
+
+use crate::errors::Error;
+
+// see /usr/include/linux/input.h
+ioctl_write_int!(eviocgrab, b'E', 0x90);
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct DeviceFd {
@@ -13,6 +21,11 @@ impl DeviceFd {
             fd,
             path: path.into(),
         }
+    }
+
+    pub fn grab(&mut self) -> Result<(), Error> {
+        unsafe { eviocgrab(self.fd, 1) }.map_err(io::Error::from)?;
+        Ok(())
     }
 }
 
@@ -35,8 +48,13 @@ impl DeviceFdMap {
         self.values.push(device_fd);
     }
 
+    #[allow(dead_code)]
     pub fn get_by_path(&self, path: &Path) -> Option<&DeviceFd> {
         self.values.iter().find(|x| *x.path == *path)
+    }
+
+    pub fn get_by_path_mut(&mut self, path: &Path) -> Option<&mut DeviceFd> {
+        self.values.iter_mut().find(|x| *x.path == *path)
     }
 
     pub fn remove_by_fd(&mut self, fd: RawFd) -> Option<DeviceFd> {
@@ -48,7 +66,7 @@ impl DeviceFdMap {
         None
     }
 
-    #[cfg(test)]
+    #[allow(dead_code)]
     fn len(&self) -> usize {
         self.values.len()
     }
@@ -69,6 +87,7 @@ mod tests {
             Some(&DeviceFd::new(1, Path::new("p1")))
         );
 
+        // path should be a key
         map.insert(DeviceFd::new(3, Path::new("p1")));
         assert_eq!(map.len(), 2);
         assert_eq!(
@@ -76,6 +95,7 @@ mod tests {
             Some(&DeviceFd::new(3, Path::new("p1")))
         );
 
+        // fd should also be a key
         map.insert(DeviceFd::new(3, Path::new("p3")));
         assert_eq!(map.len(), 2);
         assert_eq!(
@@ -83,6 +103,7 @@ mod tests {
             Some(&DeviceFd::new(3, Path::new("p3")))
         );
 
+        // when fd and path match different entries
         map.insert(DeviceFd::new(3, Path::new("p2")));
         assert_eq!(map.len(), 1);
         assert_eq!(
@@ -101,6 +122,17 @@ mod tests {
             Some(&DeviceFd::new(1, Path::new("p1")))
         );
         assert_eq!(map.get_by_path(Path::new("p2")), None);
+    }
+
+    #[test]
+    fn test_get_by_path_mut() {
+        let mut map = DeviceFdMap::default();
+        map.insert(DeviceFd::new(1, Path::new("p1")));
+        assert_eq!(map.len(), 1);
+        assert_eq!(
+            map.get_by_path_mut(Path::new("p1")),
+            Some(&mut DeviceFd::new(1, Path::new("p1")))
+        );
     }
 
     #[test]
