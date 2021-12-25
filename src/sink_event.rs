@@ -7,6 +7,12 @@ use crate::errors::{self, Error};
 #[derive(Debug)]
 pub struct SinkEvent(Vec<InputEvent>);
 
+impl AsRef<Vec<InputEvent>> for SinkEvent {
+    fn as_ref(&self) -> &Vec<InputEvent> {
+        &self.0
+    }
+}
+
 impl TryFrom<&PointerEvent> for SinkEvent {
     type Error = Error;
 

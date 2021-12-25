@@ -23,7 +23,7 @@ fn main() -> anyhow::Result<()> {
         })
     }
 
-    let sink_device = SinkDevice::create("ponde");
+    let sink_device = SinkDevice::create("ponde")?;
     let mut app = App::new(&config, sink_device);
     app.event_loop()?;
     Ok(())
