@@ -1,9 +1,19 @@
-#[derive(Debug, Default)]
+use std::path::Path;
+
+use serde::Deserialize;
+
+#[derive(Debug, Default, Deserialize)]
 pub struct Config {
     pub devices: Vec<DeviceConfig>,
 }
 
 impl Config {
+    pub fn load(path: &Path) -> Result<Self, Error> {
+        let f = std::fs::File::open(&path)?;
+        let config = serde_yaml::from_reader(&f)?;
+        Ok(config)
+    }
+
     pub fn matched_device(&self, device: &MatchDevice) -> Option<&DeviceConfig> {
         if device.pointer && !device.gesture {
             self.devices.iter().find(|x| x.match_rule.matches(device))
@@ -13,7 +23,7 @@ impl Config {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Deserialize)]
 pub struct DeviceConfig {
     pub match_rule: DeviceMatchRule,
 
@@ -57,7 +67,7 @@ pub struct DeviceConfig {
     pub scroll_method: Option<String>,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Deserialize)]
 pub struct DeviceMatchRule {
     pub name: String,
 }
