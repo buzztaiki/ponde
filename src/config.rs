@@ -2,6 +2,8 @@ use std::path::Path;
 
 use serde::Deserialize;
 
+use crate::errors::Error;
+
 #[derive(Debug, Default, Deserialize)]
 pub struct Config {
     pub devices: Vec<DeviceConfig>,
@@ -55,7 +57,7 @@ pub struct DeviceConfig {
     pub natural_scrolling: Option<bool>,
 
     /// Sets the rotation angle of the device to the given angle, in degrees clockwise. The angle must be between 0.0 (inclusive) and 360.0 (exclusive).
-    pub rotation_angle: Option<f64>,
+    pub rotation_angle: Option<u32>,
 
     /// Designates a button as scroll button. If the ScrollMethod is button and the button is logically down, x/y axis movement is converted into scroll events.
     pub scroll_button: Option<u8>,
@@ -65,6 +67,77 @@ pub struct DeviceConfig {
 
     /// Enables a scroll method. Permitted values are none, twofinger, edge, button.  Not all devices support all options, if an option is unsupported, the default scroll option for this device is used.
     pub scroll_method: Option<String>,
+}
+
+impl DeviceConfig {
+    pub fn apply_to(&self, device: &mut input::Device) -> Result<(), Error> {
+        if let Some(x) = &self.accel_profile {
+            device.config_accel_set_profile(match x.as_str() {
+                "adaptive" => input::AccelProfile::Adaptive,
+                "flat" => input::AccelProfile::Flat,
+                _ => panic!(),
+            })?;
+        }
+
+        if let Some(x) = self.accel_speed {
+            device.config_accel_set_speed(x)?;
+        }
+
+        if let Some(_x) = &self.button_mapping {
+            // TODO
+        }
+
+        if let Some(_x) = &self.drag_lock_buttons {
+            // TODO
+        }
+
+        if let Some(_x) = self.horizontal_scrolling {
+            // TODO
+        }
+
+        if let Some(x) = self.left_handed {
+            device.config_left_handed_set(x)?;
+        }
+
+        if let Some(x) = self.middle_emulation {
+            device.config_middle_emulation_set_enabled(x)?;
+        }
+
+        if let Some(x) = self.natural_scrolling {
+            device.config_scroll_set_natural_scroll_enabled(x)?;
+        }
+
+        if let Some(x) = self.rotation_angle {
+            device.config_rotation_set_angle(x)?;
+        }
+
+        if let Some(x) = self.scroll_button {
+            // TODO: like a sway-input
+            // input <identifier> scroll_button disable|button[1-3,8,9]|<event-code-or-name>
+            // Sets the button used for scroll_method on_button_down. The button can be given as an event name or code, which can be obtained from libinput debug-events, or as a x11 mouse button (button[1-3,8,9]). If set to disable, it disables the scroll_method on_button_down.
+
+            let code = evdev::Key::BTN_LEFT.code() + x as u16 - 1;
+            device.config_scroll_set_button(code as u32)?;
+        }
+
+        if let Some(x) = self.scroll_button_lock {
+            device.config_scroll_set_button_lock(if x {
+                input::ScrollButtonLockState::Enabled
+            } else {
+                input::ScrollButtonLockState::Disabled
+            })?;
+        }
+
+        if let Some(x) = &self.scroll_method {
+            device.config_scroll_set_method(match x.as_str() {
+                "none" => input::ScrollMethod::NoScroll,
+                "button" => input::ScrollMethod::OnButtonDown,
+                _ => panic!(),
+            })?;
+        }
+
+        Ok(())
+    }
 }
 
 #[derive(Debug, Default, Deserialize)]
