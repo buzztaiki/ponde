@@ -56,7 +56,7 @@ impl TryFrom<&PointerEvent> for SinkEvent {
                     res.push(InputEvent::new(
                         EventType::RELATIVE,
                         RelativeAxisType::REL_WHEEL.0,
-                        ev.scroll_value(Axis::Vertical) as i32,
+                        -ev.scroll_value(Axis::Vertical) as i32,
                     ));
                     res.push(InputEvent::new(
                         EventType::RELATIVE,
@@ -68,7 +68,7 @@ impl TryFrom<&PointerEvent> for SinkEvent {
                     res.push(InputEvent::new(
                         EventType::RELATIVE,
                         RelativeAxisType::REL_HWHEEL.0,
-                        ev.scroll_value(Axis::Horizontal) as i32,
+                        -ev.scroll_value(Axis::Horizontal) as i32,
                     ));
                     res.push(InputEvent::new(
                         EventType::RELATIVE,
@@ -84,7 +84,7 @@ impl TryFrom<&PointerEvent> for SinkEvent {
                     res.push(InputEvent::new(
                         EventType::RELATIVE,
                         RelativeAxisType::REL_WHEEL.0,
-                        ev.scroll_value(Axis::Vertical) as i32,
+                        -ev.scroll_value(Axis::Vertical) as i32,
                     ));
                 }
                 if ev.has_axis(Axis::Horizontal) {
@@ -102,7 +102,7 @@ impl TryFrom<&PointerEvent> for SinkEvent {
                     res.push(InputEvent::new(
                         EventType::RELATIVE,
                         RelativeAxisType::REL_WHEEL.0,
-                        ev.scroll_value(Axis::Vertical) as i32,
+                        -ev.scroll_value(Axis::Vertical) as i32,
                     ));
                 }
                 if ev.has_axis(Axis::Horizontal) {
@@ -114,7 +114,12 @@ impl TryFrom<&PointerEvent> for SinkEvent {
                 }
                 Ok(Self(res))
             }
-            // PointerEvent::Axis(_) => todo!(),
+            #[allow(deprecated)]
+            PointerEvent::Axis(_) => {
+                // We should ignore axis event when to handle scroll events.
+                // see LIBINPUT_EVENT_POINTER_AXIS in https://wayland.freedesktop.org/libinput/doc/latest/api/group__base.html
+                Ok(Self(Vec::new()))
+            }
             _ => Err(errors::Error::Error(format!(
                 "unexpected pointer event: {:?}",
                 event
