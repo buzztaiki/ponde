@@ -30,7 +30,7 @@ pub struct DeviceConfig {
     pub match_rule: DeviceMatchRule,
 
     /// Sets the pointer acceleration profile to the given profile. Permitted values are `adaptive`, `flat`.  Not all devices support this option or all profiles. If a profile is unsupported, the default profile for this device is used. For a description on the profiles and their behavior, see the libinput documentation.
-    pub accel_profile: Option<String>,
+    pub accel_profile: Option<AccelProfile>,
 
     /// Sets the pointer acceleration speed within the range [-1, 1]
     pub accel_speed: Option<f64>,
@@ -65,18 +65,14 @@ pub struct DeviceConfig {
     /// Enables or disables the scroll button lock. If enabled, the ScrollButton is considered logically down after the first click and remains down until the second click of that button. If disabled (the default), the ScrollButton button is considered logically down while held down and up once physically released.
     pub scroll_button_lock: Option<bool>,
 
-    /// Enables a scroll method. Permitted values are none, twofinger, edge, button.  Not all devices support all options, if an option is unsupported, the default scroll option for this device is used.
-    pub scroll_method: Option<String>,
+    /// Enables a scroll method. Permitted values are none, button.  Not all devices support all options, if an option is unsupported, the default scroll option for this device is used.
+    pub scroll_method: Option<ScrollMethod>,
 }
 
 impl DeviceConfig {
     pub fn apply_to(&self, device: &mut input::Device) -> Result<(), Error> {
-        if let Some(x) = &self.accel_profile {
-            device.config_accel_set_profile(match x.as_str() {
-                "adaptive" => input::AccelProfile::Adaptive,
-                "flat" => input::AccelProfile::Flat,
-                _ => panic!(),
-            })?;
+        if let Some(x) = self.accel_profile {
+            device.config_accel_set_profile(x.into())?;
         }
 
         if let Some(x) = self.accel_speed {
@@ -128,15 +124,43 @@ impl DeviceConfig {
             })?;
         }
 
-        if let Some(x) = &self.scroll_method {
-            device.config_scroll_set_method(match x.as_str() {
-                "none" => input::ScrollMethod::NoScroll,
-                "button" => input::ScrollMethod::OnButtonDown,
-                _ => panic!(),
-            })?;
+        if let Some(x) = self.scroll_method {
+            device.config_scroll_set_method(x.into())?;
         }
 
         Ok(())
+    }
+}
+
+#[derive(Debug, Clone, Copy, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AccelProfile {
+    Adaptive,
+    Flat,
+}
+
+impl From<AccelProfile> for input::AccelProfile {
+    fn from(x: AccelProfile) -> Self {
+        match x {
+            AccelProfile::Adaptive => input::AccelProfile::Adaptive,
+            AccelProfile::Flat => input::AccelProfile::Flat,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ScrollMethod {
+    None,
+    Button,
+}
+
+impl From<ScrollMethod> for input::ScrollMethod {
+    fn from(x: ScrollMethod) -> Self {
+        match x {
+            ScrollMethod::None => input::ScrollMethod::NoScroll,
+            ScrollMethod::Button => input::ScrollMethod::OnButtonDown,
+        }
     }
 }
 
