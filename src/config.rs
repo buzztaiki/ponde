@@ -1,6 +1,7 @@
 use std::path::Path;
+use std::str::FromStr;
 
-use serde::Deserialize;
+use serde::{Deserialize, Deserializer};
 
 use crate::errors::Error;
 
@@ -60,7 +61,7 @@ pub struct DeviceConfig {
     pub rotation_angle: Option<u32>,
 
     /// Designates a button as scroll button. If the ScrollMethod is button and the button is logically down, x/y axis movement is converted into scroll events.
-    pub scroll_button: Option<u8>,
+    pub scroll_button: Option<Button>,
 
     /// Enables or disables the scroll button lock. If enabled, the ScrollButton is considered logically down after the first click and remains down until the second click of that button. If disabled (the default), the ScrollButton button is considered logically down while held down and up once physically released.
     pub scroll_button_lock: Option<bool>,
@@ -108,12 +109,7 @@ impl DeviceConfig {
         }
 
         if let Some(x) = self.scroll_button {
-            // TODO: like a sway-input
-            // input <identifier> scroll_button disable|button[1-3,8,9]|<event-code-or-name>
-            // Sets the button used for scroll_method on_button_down. The button can be given as an event name or code, which can be obtained from libinput debug-events, or as a x11 mouse button (button[1-3,8,9]). If set to disable, it disables the scroll_method on_button_down.
-
-            let code = evdev::Key::BTN_LEFT.code() + x as u16 - 1;
-            device.config_scroll_set_button(code as u32)?;
+            device.config_scroll_set_button(x.code().into())?;
         }
 
         if let Some(x) = self.scroll_button_lock {
@@ -161,6 +157,29 @@ impl From<ScrollMethod> for input::ScrollMethod {
             ScrollMethod::None => input::ScrollMethod::NoScroll,
             ScrollMethod::Button => input::ScrollMethod::OnButtonDown,
         }
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct Button(evdev::Key);
+
+impl<'de> Deserialize<'de> for Button {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        evdev::Key::from_str(&s)
+            .ok()
+            .filter(|_| s.starts_with("BTN_"))
+            .map(Self)
+            .ok_or_else(|| serde::de::Error::custom(format!("unexpected button value {}", s)))
+    }
+}
+
+impl Button {
+    pub fn code(&self) -> u16 {
+        self.0.code()
     }
 }
 
