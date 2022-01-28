@@ -60,14 +60,11 @@ pub struct DeviceConfig {
     /// Sets the rotation angle of the device to the given angle, in degrees clockwise. The angle must be between 0.0 (inclusive) and 360.0 (exclusive).
     pub rotation_angle: Option<u32>,
 
-    /// Designates a button as scroll button. If the ScrollMethod is button and the button is logically down, x/y axis movement is converted into scroll events.
+    /// Designates a button as scroll button. If the button is logically down, x/y axis movement is converted into scroll events.
     pub scroll_button: Option<Button>,
 
     /// Enables or disables the scroll button lock. If enabled, the ScrollButton is considered logically down after the first click and remains down until the second click of that button. If disabled (the default), the ScrollButton button is considered logically down while held down and up once physically released.
     pub scroll_button_lock: Option<bool>,
-
-    /// Enables a scroll method. Permitted values are none, button.  Not all devices support all options, if an option is unsupported, the default scroll option for this device is used.
-    pub scroll_method: Option<ScrollMethod>,
 }
 
 impl DeviceConfig {
@@ -110,6 +107,7 @@ impl DeviceConfig {
 
         if let Some(x) = self.scroll_button {
             device.config_scroll_set_button(x.code().into())?;
+            device.config_scroll_set_method(input::ScrollMethod::OnButtonDown)?;
         }
 
         if let Some(x) = self.scroll_button_lock {
@@ -118,10 +116,6 @@ impl DeviceConfig {
             } else {
                 input::ScrollButtonLockState::Disabled
             })?;
-        }
-
-        if let Some(x) = self.scroll_method {
-            device.config_scroll_set_method(x.into())?;
         }
 
         Ok(())
@@ -140,22 +134,6 @@ impl From<AccelProfile> for input::AccelProfile {
         match x {
             AccelProfile::Adaptive => input::AccelProfile::Adaptive,
             AccelProfile::Flat => input::AccelProfile::Flat,
-        }
-    }
-}
-
-#[derive(Debug, Clone, Copy, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum ScrollMethod {
-    None,
-    Button,
-}
-
-impl From<ScrollMethod> for input::ScrollMethod {
-    fn from(x: ScrollMethod) -> Self {
-        match x {
-            ScrollMethod::None => input::ScrollMethod::NoScroll,
-            ScrollMethod::Button => input::ScrollMethod::OnButtonDown,
         }
     }
 }
