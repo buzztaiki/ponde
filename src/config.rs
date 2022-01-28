@@ -45,9 +45,6 @@ pub struct DeviceConfig {
     /// For both meta and button pair configuration, the button numbers are device button numbers, i.e. the ButtonMapping applies after drag lock.
     pub drag_lock_buttons: Option<Vec<u8>>,
 
-    /// Disables horizontal scrolling. When disabled, this driver will discard any horizontal scroll events from libinput. Note that this does not disable horizontal scrolling, it merely discards the horizontal axis from any scroll events.
-    pub horizontal_scrolling: Option<bool>,
-
     /// Enables left-handed button orientation, i.e. swapping left and right buttons.
     pub left_handed: Option<bool>,
 
@@ -82,10 +79,6 @@ impl DeviceConfig {
         }
 
         if let Some(_x) = &self.drag_lock_buttons {
-            // TODO
-        }
-
-        if let Some(_x) = self.horizontal_scrolling {
             // TODO
         }
 
