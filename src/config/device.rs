@@ -17,14 +17,15 @@ pub struct Device {
     /// Sets the pointer acceleration speed within the range [-1, 1]
     pub accel_speed: Option<f64>,
 
-    /// Sets  the logical button mapping for this device, see XSetPointerMapping(3). The string must be a space-separated list of button mappings in the order of the logical buttons on the device, starting with button 1.  The default mapping is "1 2 3 ... 32". A mapping of 0 deactivates the button. Multiple buttons can have the same mapping.  Invalid mapping strings are discarded and the default mapping is used for all buttons. Buttons not specified in the user's mapping use the default mapping. See section BUTTON MAPPING for more details.
-    pub button_mapping: Option<Vec<u8>>,
+    // /// Sets  the logical button mapping for this device, see XSetPointerMapping(3). The string must be a space-separated list of button mappings in the order of the logical buttons on the device, starting with button 1.  The default mapping is "1 2 3 ... 32". A mapping of 0 deactivates the button. Multiple buttons can have the same mapping.  Invalid mapping strings are discarded and the default mapping is used for all buttons. Buttons not specified in the user's mapping use the default mapping. See section BUTTON MAPPING for more details.
+    // pub button_mapping: Option<Vec<u8>>,
 
-    /// Sets "drag lock buttons" that simulate a button logically down even when it has been physically released. To logically release a locked button, a second click of the same button is required.
-    /// If the option is a single button number, that button acts as the "meta" locking button for the next button number. See section BUTTON DRAG LOCK for details.
-    /// If the option is a list of button number pairs, the first number of each number pair is the lock button, the second number the logical button number to be locked. See section BUTTON DRAG LOCK for details.
-    /// For both meta and button pair configuration, the button numbers are device button numbers, i.e. the ButtonMapping applies after drag lock.
-    pub drag_lock_buttons: Option<Vec<u8>>,
+    // TODO
+    // /// Sets "drag lock buttons" that simulate a button logically down even when it has been physically released. To logically release a locked button, a second click of the same button is required.
+    // /// If the option is a single button number, that button acts as the "meta" locking button for the next button number. See section BUTTON DRAG LOCK for details.
+    // /// If the option is a list of button number pairs, the first number of each number pair is the lock button, the second number the logical button number to be locked. See section BUTTON DRAG LOCK for details.
+    // /// For both meta and button pair configuration, the button numbers are device button numbers, i.e. the ButtonMapping applies after drag lock.
+    // pub drag_lock_buttons: Option<Vec<u8>>,
 
     /// Enables left-handed button orientation, i.e. swapping left and right buttons.
     pub left_handed: Option<bool>,
@@ -53,14 +54,6 @@ impl Device {
 
         if let Some(x) = self.accel_speed {
             device.config_accel_set_speed(x)?;
-        }
-
-        if let Some(_x) = &self.button_mapping {
-            // TODO
-        }
-
-        if let Some(_x) = &self.drag_lock_buttons {
-            // TODO
         }
 
         if let Some(x) = self.left_handed {
