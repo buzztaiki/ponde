@@ -52,20 +52,22 @@ impl<'a> App<'a> {
     }
 
     fn handle_event(&mut self, event: &Event) -> Result<(), Error> {
-        let device = &event.device();
-        let _device_config = match self.config.matched_device(&device.into()) {
+        let mut device = event.device();
+        let device_config = match self.config.matched_device(&(&device).into()) {
             Some(x) => x,
             None => return Ok(()),
         };
 
         match event {
             Event::Device(DeviceEvent::Added(_)) => {
-                let udev_device = udev_device(device)
+                let udev_device = udev_device(&device)
                     .ok_or_else(|| Error::Error("failed to get udev_device".to_string()))?;
 
                 let devnode = udev_device
                     .devnode()
                     .ok_or_else(|| Error::Error("failed to get devnode".to_string()))?;
+
+                device_config.apply_to(&mut device)?;
 
                 {
                     let mut map = self.device_fd_map.lock().unwrap();

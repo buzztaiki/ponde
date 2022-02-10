@@ -1,117 +1,67 @@
-#[derive(Debug, Default)]
+mod accel_profile;
+mod button;
+mod device;
+mod device_info;
+mod match_rule;
+
+use std::path::Path;
+
+use serde::Deserialize;
+
+use crate::errors::Error;
+
+use self::device::Device;
+use self::device_info::DeviceInfo;
+
+#[derive(Debug, Default, Deserialize)]
 pub struct Config {
-    pub devices: Vec<DeviceConfig>,
+    pub devices: Vec<Device>,
 }
 
 impl Config {
-    pub fn matched_device(&self, device: &MatchDevice) -> Option<&DeviceConfig> {
-        if device.pointer && !device.gesture {
-            self.devices.iter().find(|x| x.match_rule.matches(device))
-        } else {
-            None
-        }
+    pub fn load(path: &Path) -> Result<Self, Error> {
+        let f = std::fs::File::open(&path)?;
+        let config = serde_yaml::from_reader(&f)?;
+        Ok(config)
     }
-}
 
-#[derive(Debug, Default)]
-pub struct DeviceConfig {
-    pub match_rule: DeviceMatchRule,
-}
-
-#[derive(Debug, Default)]
-pub struct DeviceMatchRule {
-    pub name: String,
-}
-
-impl DeviceMatchRule {
-    pub fn matches(&self, device: &MatchDevice) -> bool {
-        device.name == self.name
-    }
-}
-
-pub struct MatchDevice {
-    pub name: String,
-    pub pointer: bool,
-    pub gesture: bool,
-}
-
-impl From<&input::Device> for MatchDevice {
-    fn from(x: &input::Device) -> Self {
-        MatchDevice {
-            name: x.name().to_string(),
-            pointer: x.has_capability(input::DeviceCapability::Pointer),
-            gesture: x.has_capability(input::DeviceCapability::Gesture),
-        }
+    pub fn matched_device(&self, device_info: &DeviceInfo) -> Option<&Device> {
+        self.devices.iter().find(|x| x.matches(device_info))
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::config::device::Device;
+    use crate::config::device_info::DeviceInfo;
+
     use super::*;
 
     #[test]
-    fn test_pointer_device() {
-        let device = MatchDevice {
+    fn test_empty() {
+        let device_info = DeviceInfo {
             name: "moo".to_string(),
             pointer: true,
             gesture: false,
         };
 
-        let mut config = Config { devices: vec![] };
-        assert!(config.matched_device(&device).is_none());
-
-        config.devices.push(DeviceConfig {
-            match_rule: DeviceMatchRule {
-                name: "woo".to_string(),
-            },
-        });
-        assert!(config.matched_device(&device).is_none());
-
-        config.devices.push(DeviceConfig {
-            match_rule: DeviceMatchRule {
-                name: "moo".to_string(),
-            },
-        });
-        assert!(config.matched_device(&device).is_some());
-        assert_eq!(
-            config.matched_device(&device).unwrap().match_rule.name,
-            "moo".to_string()
-        );
+        let config = Config { devices: vec![] };
+        assert!(config.matched_device(&device_info).is_none());
     }
 
     #[test]
-    fn test_non_pointer_device() {
-        let device = MatchDevice {
+    fn test_found_device() {
+        let device_info = DeviceInfo {
             name: "moo".to_string(),
-            pointer: false,
+            pointer: true,
             gesture: false,
         };
 
+        let mut device_config = Device::default();
+        device_config.match_rule.name = "moo".to_string();
         let config = Config {
-            devices: vec![DeviceConfig {
-                match_rule: DeviceMatchRule {
-                    name: "moo".to_string(),
-                },
-            }],
+            devices: vec![device_config],
         };
-        assert!(config.matched_device(&device).is_none());
-    }
-
-    #[test]
-    fn test_gesture_device() {
-        let device = MatchDevice {
-            name: "moo".to_string(),
-            pointer: true,
-            gesture: true,
-        };
-
-        let config = Config {
-            devices: vec![DeviceConfig {
-                match_rule: DeviceMatchRule {
-                    name: "moo".to_string(),
-                },
-            }],
-        };
-        assert!(config.matched_device(&device).is_none());
+        assert!(config.matched_device(&device_info).is_some());
     }
 }

@@ -19,106 +19,83 @@ impl TryFrom<&PointerEvent> for SinkEvent {
     fn try_from(event: &PointerEvent) -> Result<Self, Self::Error> {
         match event {
             PointerEvent::Motion(ev) => Ok(Self(vec![
-                InputEvent::new(
-                    EventType::RELATIVE,
-                    RelativeAxisType::REL_X.0,
-                    ev.dx() as i32,
-                ),
-                InputEvent::new(
-                    EventType::RELATIVE,
-                    RelativeAxisType::REL_Y.0,
-                    ev.dy() as i32,
-                ),
+                new_relative_event(RelativeAxisType::REL_X, ev.dx()),
+                new_relative_event(RelativeAxisType::REL_Y, ev.dy()),
             ])),
             PointerEvent::MotionAbsolute(ev) => Ok(Self(vec![
-                InputEvent::new(
-                    EventType::ABSOLUTE,
-                    AbsoluteAxisType::ABS_X.0,
-                    ev.absolute_x() as i32,
-                ),
-                InputEvent::new(
-                    EventType::ABSOLUTE,
-                    AbsoluteAxisType::ABS_Y.0,
-                    ev.absolute_y() as i32,
-                ),
+                new_absolute_event(AbsoluteAxisType::ABS_X, ev.absolute_x()),
+                new_absolute_event(AbsoluteAxisType::ABS_Y, ev.absolute_y()),
             ])),
-            PointerEvent::Button(ev) => Ok(Self(vec![InputEvent::new(
-                EventType::KEY,
-                ev.button() as u16,
-                match ev.button_state() {
-                    ButtonState::Pressed => 1,
-                    ButtonState::Released => 0,
-                },
-            )])),
+            PointerEvent::Button(ev) => {
+                Ok(Self(vec![new_button_event(ev.button(), ev.button_state())]))
+            }
             PointerEvent::ScrollWheel(ev) => {
-                let mut res = Vec::new();
-                if ev.has_axis(Axis::Vertical) {
-                    res.push(InputEvent::new(
-                        EventType::RELATIVE,
-                        RelativeAxisType::REL_WHEEL.0,
-                        ev.scroll_value(Axis::Vertical) as i32,
-                    ));
-                    res.push(InputEvent::new(
-                        EventType::RELATIVE,
-                        RelativeAxisType::REL_WHEEL_HI_RES.0,
-                        ev.scroll_value_v120(Axis::Vertical) as i32,
-                    ));
-                }
-                if ev.has_axis(Axis::Horizontal) {
-                    res.push(InputEvent::new(
-                        EventType::RELATIVE,
-                        RelativeAxisType::REL_HWHEEL.0,
-                        ev.scroll_value(Axis::Horizontal) as i32,
-                    ));
-                    res.push(InputEvent::new(
-                        EventType::RELATIVE,
-                        RelativeAxisType::REL_HWHEEL_HI_RES.0,
-                        ev.scroll_value_v120(Axis::Horizontal) as i32,
-                    ));
-                }
+                let mut res = convert_scroll_event(ev);
+                res.append(&mut dispatch_scroll_event(ev, |axis| match axis {
+                    Axis::Vertical => new_relative_event(
+                        RelativeAxisType::REL_WHEEL_HI_RES,
+                        ev.scroll_value_v120(axis),
+                    ),
+                    Axis::Horizontal => new_relative_event(
+                        RelativeAxisType::REL_HWHEEL_HI_RES,
+                        ev.scroll_value_v120(axis),
+                    ),
+                }));
                 Ok(Self(res))
             }
-            PointerEvent::ScrollFinger(ev) => {
-                let mut res = Vec::new();
-                if ev.has_axis(Axis::Vertical) {
-                    res.push(InputEvent::new(
-                        EventType::RELATIVE,
-                        RelativeAxisType::REL_WHEEL.0,
-                        ev.scroll_value(Axis::Vertical) as i32,
-                    ));
-                }
-                if ev.has_axis(Axis::Horizontal) {
-                    res.push(InputEvent::new(
-                        EventType::RELATIVE,
-                        RelativeAxisType::REL_HWHEEL.0,
-                        ev.scroll_value(Axis::Horizontal) as i32,
-                    ));
-                }
-                Ok(Self(res))
+            PointerEvent::ScrollFinger(ev) => Ok(Self(convert_scroll_event(ev))),
+            PointerEvent::ScrollContinuous(ev) => Ok(Self(convert_scroll_event(ev))),
+            #[allow(deprecated)]
+            PointerEvent::Axis(_) => {
+                // We should ignore axis event when to handle scroll events.
+                // see LIBINPUT_EVENT_POINTER_AXIS in https://wayland.freedesktop.org/libinput/doc/latest/api/group__base.html
+                Ok(Self(Vec::new()))
             }
-            PointerEvent::ScrollContinuous(ev) => {
-                let mut res = Vec::new();
-                if ev.has_axis(Axis::Vertical) {
-                    res.push(InputEvent::new(
-                        EventType::RELATIVE,
-                        RelativeAxisType::REL_WHEEL.0,
-                        ev.scroll_value(Axis::Vertical) as i32,
-                    ));
-                }
-                if ev.has_axis(Axis::Horizontal) {
-                    res.push(InputEvent::new(
-                        EventType::RELATIVE,
-                        RelativeAxisType::REL_HWHEEL.0,
-                        ev.scroll_value(Axis::Horizontal) as i32,
-                    ));
-                }
-                Ok(Self(res))
-            }
-            // PointerEvent::Axis(_) => todo!(),
             _ => Err(errors::Error::Error(format!(
                 "unexpected pointer event: {:?}",
                 event
             ))),
         }
     }
+}
+
+fn new_relative_event(axis_type: RelativeAxisType, value: f64) -> InputEvent {
+    InputEvent::new(EventType::RELATIVE, axis_type.0, value as i32)
+}
+
+fn new_absolute_event(axis_type: AbsoluteAxisType, value: f64) -> InputEvent {
+    InputEvent::new(EventType::ABSOLUTE, axis_type.0, value as i32)
+}
+
+fn new_button_event(button: u32, state: ButtonState) -> InputEvent {
+    InputEvent::new(
+        EventType::KEY,
+        button as u16,
+        match state {
+            ButtonState::Pressed => 1,
+            ButtonState::Released => 0,
+        },
+    )
+}
+
+fn dispatch_scroll_event(
+    ev: &impl PointerScrollEvent,
+    f: impl Fn(Axis) -> InputEvent,
+) -> Vec<InputEvent> {
+    let mut res = Vec::new();
+    if ev.has_axis(Axis::Vertical) {
+        let x = f(Axis::Vertical);
+        res.push(InputEvent::new(x.event_type(), x.code(), -x.value()));
+    }
+    if ev.has_axis(Axis::Horizontal) {
+        res.push(f(Axis::Horizontal));
+    }
+    res
+}
+
+fn convert_scroll_event(ev: &impl PointerScrollEvent) -> Vec<InputEvent> {
+    dispatch_scroll_event(ev, |axis| match axis {
+        Axis::Vertical => new_relative_event(RelativeAxisType::REL_WHEEL, ev.scroll_value(axis)),
+        Axis::Horizontal => new_relative_event(RelativeAxisType::REL_HWHEEL, ev.scroll_value(axis)),
+    })
 }
