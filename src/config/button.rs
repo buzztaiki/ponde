@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use serde::{Deserialize, Deserializer};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Button(evdev::Key);
 
 impl<'de> Deserialize<'de> for Button {
@@ -20,6 +20,10 @@ impl<'de> Deserialize<'de> for Button {
 }
 
 impl Button {
+    pub fn from_code(code: u16) -> Self {
+        Self(evdev::Key::new(code))
+    }
+
     pub fn code(&self) -> u16 {
         self.0.code()
     }

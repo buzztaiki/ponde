@@ -11,6 +11,7 @@ use crate::default_libinput_interface::DefaultLibinputInterface;
 use crate::device_fd::{DeviceFd, DeviceFdMap};
 use crate::errors::Error;
 use crate::sink_device::SinkDevice;
+use crate::sink_event::SinkEvent;
 
 type DeviceFdMapPtr = Arc<Mutex<DeviceFdMap>>;
 
@@ -78,7 +79,7 @@ impl<'a> App<'a> {
                 }
             }
             Event::Pointer(ev) => {
-                let sink_event = ev.try_into()?;
+                let sink_event = SinkEvent::from_pointer_event(ev, device_config)?;
                 self.sink_device.send_event(&sink_event)?;
             }
             _ => return Err(Error::Error(format!("unexpected event: {:?}", event))),
