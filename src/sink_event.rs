@@ -1,5 +1,7 @@
 use evdev::{AbsoluteAxisType, EventType, InputEvent, RelativeAxisType};
-use input::event::pointer::{Axis, ButtonState, PointerButtonEvent, PointerScrollEvent};
+use input::event::pointer::{
+    Axis, ButtonState, PointerButtonEvent, PointerScrollEvent, PointerScrollWheelEvent,
+};
 use input::event::PointerEvent;
 
 use crate::config;
@@ -29,20 +31,7 @@ impl SinkEvent {
                 new_absolute_event(AbsoluteAxisType::ABS_Y, ev.absolute_y()),
             ])),
             PointerEvent::Button(ev) => Ok(Self(convert_button(ev, device_config))),
-            PointerEvent::ScrollWheel(ev) => {
-                let mut res = convert_scroll_event(ev);
-                res.append(&mut dispatch_scroll_event(ev, |axis| match axis {
-                    Axis::Vertical => new_relative_event(
-                        RelativeAxisType::REL_WHEEL_HI_RES,
-                        ev.scroll_value_v120(axis),
-                    ),
-                    Axis::Horizontal => new_relative_event(
-                        RelativeAxisType::REL_HWHEEL_HI_RES,
-                        ev.scroll_value_v120(axis),
-                    ),
-                }));
-                Ok(Self(res))
-            }
+            PointerEvent::ScrollWheel(ev) => Ok(Self(convert_wheel_event(ev))),
             PointerEvent::ScrollFinger(ev) => Ok(Self(convert_scroll_event(ev))),
             PointerEvent::ScrollContinuous(ev) => Ok(Self(convert_scroll_event(ev))),
             #[allow(deprecated)]
@@ -98,6 +87,21 @@ fn convert_scroll_event(ev: &impl PointerScrollEvent) -> Vec<InputEvent> {
         Axis::Vertical => new_relative_event(RelativeAxisType::REL_WHEEL, ev.scroll_value(axis)),
         Axis::Horizontal => new_relative_event(RelativeAxisType::REL_HWHEEL, ev.scroll_value(axis)),
     })
+}
+
+fn convert_wheel_event(ev: &PointerScrollWheelEvent) -> Vec<InputEvent> {
+    let mut res = convert_scroll_event(ev);
+    res.append(&mut dispatch_scroll_event(ev, |axis| match axis {
+        Axis::Vertical => new_relative_event(
+            RelativeAxisType::REL_WHEEL_HI_RES,
+            ev.scroll_value_v120(axis),
+        ),
+        Axis::Horizontal => new_relative_event(
+            RelativeAxisType::REL_HWHEEL_HI_RES,
+            ev.scroll_value_v120(axis),
+        ),
+    }));
+    res
 }
 
 fn convert_button(ev: &PointerButtonEvent, cfg: &config::Device) -> Vec<InputEvent> {
