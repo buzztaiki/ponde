@@ -1,7 +1,10 @@
 use evdev::{AbsoluteAxisType, EventType, InputEvent, RelativeAxisType};
-use input::event::pointer::{Axis, ButtonState, PointerScrollEvent};
+use input::event::pointer::{
+    Axis, ButtonState, PointerButtonEvent, PointerScrollEvent, PointerScrollWheelEvent,
+};
 use input::event::PointerEvent;
 
+use crate::config;
 use crate::errors::{self, Error};
 
 #[derive(Debug)]
@@ -13,10 +16,11 @@ impl AsRef<Vec<InputEvent>> for SinkEvent {
     }
 }
 
-impl TryFrom<&PointerEvent> for SinkEvent {
-    type Error = Error;
-
-    fn try_from(event: &PointerEvent) -> Result<Self, Self::Error> {
+impl SinkEvent {
+    pub fn from_pointer_event(
+        event: &PointerEvent,
+        device_config: &config::Device,
+    ) -> Result<Self, Error> {
         match event {
             PointerEvent::Motion(ev) => Ok(Self(vec![
                 new_relative_event(RelativeAxisType::REL_X, ev.dx()),
@@ -26,23 +30,8 @@ impl TryFrom<&PointerEvent> for SinkEvent {
                 new_absolute_event(AbsoluteAxisType::ABS_X, ev.absolute_x()),
                 new_absolute_event(AbsoluteAxisType::ABS_Y, ev.absolute_y()),
             ])),
-            PointerEvent::Button(ev) => {
-                Ok(Self(vec![new_button_event(ev.button(), ev.button_state())]))
-            }
-            PointerEvent::ScrollWheel(ev) => {
-                let mut res = convert_scroll_event(ev);
-                res.append(&mut dispatch_scroll_event(ev, |axis| match axis {
-                    Axis::Vertical => new_relative_event(
-                        RelativeAxisType::REL_WHEEL_HI_RES,
-                        ev.scroll_value_v120(axis),
-                    ),
-                    Axis::Horizontal => new_relative_event(
-                        RelativeAxisType::REL_HWHEEL_HI_RES,
-                        ev.scroll_value_v120(axis),
-                    ),
-                }));
-                Ok(Self(res))
-            }
+            PointerEvent::Button(ev) => Ok(Self(convert_button(ev, device_config))),
+            PointerEvent::ScrollWheel(ev) => Ok(Self(convert_wheel_event(ev))),
             PointerEvent::ScrollFinger(ev) => Ok(Self(convert_scroll_event(ev))),
             PointerEvent::ScrollContinuous(ev) => Ok(Self(convert_scroll_event(ev))),
             #[allow(deprecated)]
@@ -67,10 +56,10 @@ fn new_absolute_event(axis_type: AbsoluteAxisType, value: f64) -> InputEvent {
     InputEvent::new(EventType::ABSOLUTE, axis_type.0, value as i32)
 }
 
-fn new_button_event(button: u32, state: ButtonState) -> InputEvent {
+fn new_button_event(button: u16, state: ButtonState) -> InputEvent {
     InputEvent::new(
         EventType::KEY,
-        button as u16,
+        button,
         match state {
             ButtonState::Pressed => 1,
             ButtonState::Released => 0,
@@ -98,4 +87,25 @@ fn convert_scroll_event(ev: &impl PointerScrollEvent) -> Vec<InputEvent> {
         Axis::Vertical => new_relative_event(RelativeAxisType::REL_WHEEL, ev.scroll_value(axis)),
         Axis::Horizontal => new_relative_event(RelativeAxisType::REL_HWHEEL, ev.scroll_value(axis)),
     })
+}
+
+fn convert_wheel_event(ev: &PointerScrollWheelEvent) -> Vec<InputEvent> {
+    let mut res = convert_scroll_event(ev);
+    res.append(&mut dispatch_scroll_event(ev, |axis| match axis {
+        Axis::Vertical => new_relative_event(
+            RelativeAxisType::REL_WHEEL_HI_RES,
+            ev.scroll_value_v120(axis),
+        ),
+        Axis::Horizontal => new_relative_event(
+            RelativeAxisType::REL_HWHEEL_HI_RES,
+            ev.scroll_value_v120(axis),
+        ),
+    }));
+    res
+}
+
+fn convert_button(ev: &PointerButtonEvent, cfg: &config::Device) -> Vec<InputEvent> {
+    let source_button = config::Button::from_code(ev.button() as u16);
+    let button = cfg.map_button(source_button);
+    vec![new_button_event(button.code(), ev.button_state())]
 }

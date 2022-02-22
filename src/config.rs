@@ -10,7 +10,8 @@ use serde::Deserialize;
 
 use crate::errors::Error;
 
-use self::device::Device;
+pub use self::button::Button;
+pub use self::device::Device;
 use self::device_info::DeviceInfo;
 
 #[derive(Debug, Default, Deserialize)]

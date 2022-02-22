@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use serde::Deserialize;
 
 use crate::errors::Error;
@@ -17,8 +19,8 @@ pub struct Device {
     /// Sets the pointer acceleration speed within the range [-1, 1]
     pub accel_speed: Option<f64>,
 
-    // /// Sets  the logical button mapping for this device, see XSetPointerMapping(3). The string must be a space-separated list of button mappings in the order of the logical buttons on the device, starting with button 1.  The default mapping is "1 2 3 ... 32". A mapping of 0 deactivates the button. Multiple buttons can have the same mapping.  Invalid mapping strings are discarded and the default mapping is used for all buttons. Buttons not specified in the user's mapping use the default mapping. See section BUTTON MAPPING for more details.
-    // pub button_mapping: Option<Vec<u8>>,
+    /// Sets the logical button mapping for this device.
+    pub button_mapping: Option<HashMap<Button, Button>>,
 
     // TODO
     // /// Sets "drag lock buttons" that simulate a button logically down even when it has been physically released. To logically release a locked button, a second click of the same button is required.
@@ -26,7 +28,6 @@ pub struct Device {
     // /// If the option is a list of button number pairs, the first number of each number pair is the lock button, the second number the logical button number to be locked. See section BUTTON DRAG LOCK for details.
     // /// For both meta and button pair configuration, the button numbers are device button numbers, i.e. the ButtonMapping applies after drag lock.
     // pub drag_lock_buttons: Option<Vec<u8>>,
-
     /// Enables left-handed button orientation, i.e. swapping left and right buttons.
     pub left_handed: Option<bool>,
 
@@ -86,6 +87,14 @@ impl Device {
         }
 
         Ok(())
+    }
+
+    pub fn map_button(&self, button: Button) -> Button {
+        if let Some(button_mapping) = &self.button_mapping {
+            button_mapping.get(&button).copied().unwrap_or(button)
+        } else {
+            button
+        }
     }
 
     pub fn matches(&self, device_info: &DeviceInfo) -> bool {
