@@ -4,7 +4,10 @@ use evdev::{AttributeSet, Key, RelativeAxisType};
 use crate::errors::Error;
 use crate::sink_event::SinkEvent;
 
-pub struct SinkDevice(VirtualDevice);
+pub struct SinkDevice {
+    vdevice: VirtualDevice,
+    name: String,
+}
 
 impl SinkDevice {
     pub fn create(name: &str) -> Result<Self, Error> {
@@ -24,11 +27,18 @@ impl SinkDevice {
             .with_keys(&keys)?
             .with_relative_axes(&rel_axes)?
             .build()?;
-        Ok(Self(vdevice))
+        Ok(Self {
+            vdevice,
+            name: name.to_string(),
+        })
     }
 
     pub fn send_event(&mut self, event: &SinkEvent) -> Result<(), Error> {
-        self.0.emit(event.as_ref())?;
+        self.vdevice.emit(event.as_ref())?;
         Ok(())
+    }
+
+    pub fn name(&self) -> &str {
+        &self.name
     }
 }

@@ -59,24 +59,18 @@ impl<'a> App<'a> {
             None => return Ok(()),
         };
 
+        if device.name() == self.sink_device.name() {
+            return  Ok(());
+        }
+
         match event {
             Event::Device(DeviceEvent::Added(_)) => {
-                let udev_device = udev_device(&device)
-                    .ok_or_else(|| Error::Error("failed to get udev_device".to_string()))?;
-
-                let devnode = udev_device
-                    .devnode()
-                    .ok_or_else(|| Error::Error("failed to get devnode".to_string()))?;
-
                 device_config.apply_to(&mut device)?;
-
-                {
-                    let mut map = self.device_fd_map.lock().unwrap();
-                    let device_fd = map.get_by_path_mut(devnode).ok_or_else(|| {
-                        Error::Error(format!("failed to get device_fd of {}", devnode.display()))
-                    })?;
-                    device_fd.grab()?;
-                }
+                let mut map = self.device_fd_map.lock().unwrap();
+                let device_fd = map.get_by_name_mut(device.sysname()).ok_or_else(|| {
+                    Error::Error(format!("failed to get device_fd of {} ({})", device.sysname(), device.name()))
+                })?;
+                device_fd.grab()?;
             }
             Event::Pointer(ev) => {
                 let sink_event = SinkEvent::from_pointer_event(ev, device_config)?;
@@ -86,10 +80,6 @@ impl<'a> App<'a> {
         }
         Ok(())
     }
-}
-
-fn udev_device(device: &input::Device) -> Option<udev::Device> {
-    unsafe { device.udev_device() }
 }
 
 struct AppLibinputInterface {
@@ -110,7 +100,9 @@ impl LibinputInterface for AppLibinputInterface {
     fn open_restricted(&mut self, path: &Path, flags: i32) -> Result<RawFd, i32> {
         let fd = self.iface.open_restricted(path, flags)?;
         let mut map = self.device_fd_map.lock().unwrap();
-        map.insert(DeviceFd::new(fd, path));
+        if let Some(device_fd) = DeviceFd::new(fd, path) {
+            map.insert(device_fd);
+        }
         Ok(fd)
     }
 
