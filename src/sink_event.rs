@@ -40,7 +40,7 @@ impl SinkEvent {
                 // see LIBINPUT_EVENT_POINTER_AXIS in https://wayland.freedesktop.org/libinput/doc/latest/api/group__base.html
                 Ok(Self(Vec::new()))
             }
-            _ => Err(errors::Error::Error(format!(
+            _ => Err(errors::Error::Message(format!(
                 "unexpected pointer event: {:?}",
                 event
             ))),

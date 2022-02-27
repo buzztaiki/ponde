@@ -68,7 +68,7 @@ impl<'a> App<'a> {
                 device_config.apply_to(&mut device)?;
                 let mut map = self.device_fd_map.lock().unwrap();
                 let device_fd = map.get_by_name_mut(device.sysname()).ok_or_else(|| {
-                    Error::Error(format!("failed to get device_fd of {} ({})", device.sysname(), device.name()))
+                    Error::Message(format!("failed to get device_fd of {} ({})", device.sysname(), device.name()))
                 })?;
                 device_fd.grab()?;
             }
@@ -76,7 +76,7 @@ impl<'a> App<'a> {
                 let sink_event = SinkEvent::from_pointer_event(ev, device_config)?;
                 self.sink_device.send_event(&sink_event)?;
             }
-            _ => return Err(Error::Error(format!("unexpected event: {:?}", event))),
+            _ => return Err(Error::Message(format!("unexpected event: {:?}", event))),
         }
         Ok(())
     }

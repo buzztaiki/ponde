@@ -11,7 +11,7 @@ pub enum Error {
     #[error("invalid device configuration value")]
     DeviceConfigInvalid,
     #[error("error: {0}")]
-    Error(String),
+    Message(String),
 }
 
 impl From<input::DeviceConfigError> for Error {
