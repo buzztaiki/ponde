@@ -5,6 +5,7 @@ use std::sync::{Arc, Mutex};
 use input::event::{DeviceEvent, EventTrait};
 use input::Event;
 use input::{Libinput, LibinputInterface};
+use nix::poll::{poll, PollFd, PollFlags};
 
 use crate::config::Config;
 use crate::default_libinput_interface::DefaultLibinputInterface;
@@ -38,8 +39,9 @@ impl<'a> App<'a> {
             .udev_assign_seat("seat0")
             .expect("failed to assign seat");
 
-        loop {
-            libinput.dispatch().unwrap();
+        let mut poll_fds = [PollFd::new(libinput.as_raw_fd(), PollFlags::POLLIN)];
+        while poll(&mut poll_fds, -1)? > -1 {
+            libinput.dispatch()?;
             for event in &mut libinput {
                 if let Err(e) = self.handle_event(&event) {
                     eprintln!(
@@ -50,6 +52,7 @@ impl<'a> App<'a> {
                 }
             }
         }
+        Ok(())
     }
 
     fn handle_event(&mut self, event: &Event) -> Result<(), Error> {
@@ -60,7 +63,7 @@ impl<'a> App<'a> {
         };
 
         if device.name() == self.sink_device.name() {
-            return  Ok(());
+            return Ok(());
         }
 
         match event {
@@ -68,7 +71,11 @@ impl<'a> App<'a> {
                 device_config.apply_to(&mut device)?;
                 let mut map = self.device_fd_map.lock().unwrap();
                 let device_fd = map.get_by_name_mut(device.sysname()).ok_or_else(|| {
-                    Error::Message(format!("failed to get device_fd of {} ({})", device.sysname(), device.name()))
+                    Error::Message(format!(
+                        "failed to get device_fd of {} ({})",
+                        device.sysname(),
+                        device.name()
+                    ))
                 })?;
                 device_fd.grab()?;
             }

@@ -146,7 +146,10 @@ mod tests {
         let mut map = DeviceFdMap::default();
         map.insert(new_device_fd(1, Path::new("/dev/f1")));
         map.insert(new_device_fd(2, Path::new("/dev/f2")));
-        assert_eq!(map.remove_by_fd(1), Some(new_device_fd(1, Path::new("/dev/f1"))));
+        assert_eq!(
+            map.remove_by_fd(1),
+            Some(new_device_fd(1, Path::new("/dev/f1")))
+        );
         assert_eq!(map.remove_by_fd(1), None);
         assert_eq!(map.len(), 1);
     }

@@ -4,6 +4,8 @@ use std::io;
 pub enum Error {
     #[error("io error: {0}")]
     Io(#[from] io::Error),
+    #[error("nix error: {0}")]
+    Nix(#[from] nix::Error),
     #[error("yaml load error: {0}")]
     Yaml(#[from] serde_yaml::Error),
     #[error("unsuported device configuration")]
