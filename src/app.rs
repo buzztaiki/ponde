@@ -44,13 +44,7 @@ impl<'a> App<'a> {
         while poll(&mut poll_fds, -1)? > -1 {
             libinput.dispatch()?;
             for event in &mut libinput {
-                if let Err(e) = self.handle_event(&event) {
-                    eprintln!(
-                        "failed to handle event: device={}: {}",
-                        event.device().name(),
-                        e
-                    );
-                }
+                self.handle_event(&event)?;
             }
         }
         Ok(())
