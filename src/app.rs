@@ -69,6 +69,12 @@ impl<'a> App<'a> {
 
         match event {
             Event::Device(DeviceEvent::Added(_)) => {
+                eprintln!(
+                    "grab matched device: {} ({})",
+                    device.sysname(),
+                    device.name()
+                );
+
                 device_config.apply_to(&mut device)?;
                 let mut map = self.device_fd_map.borrow_mut();
                 let device_fd = map.get_by_name_mut(device.sysname()).ok_or_else(|| {
