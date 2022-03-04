@@ -69,39 +69,38 @@ fn new_button_event(button: u16, state: ButtonState) -> InputEvent {
 
 fn dispatch_scroll_event(
     ev: &impl PointerScrollEvent,
-    f: impl Fn(Axis) -> InputEvent,
+    f: impl Fn(Axis) -> (f64, f64),
 ) -> Vec<InputEvent> {
     let mut res = Vec::new();
     if ev.has_axis(Axis::Vertical) {
-        let x = f(Axis::Vertical);
-        res.push(InputEvent::new(x.event_type(), x.code(), -x.value()));
+        let (v, v120) = f(Axis::Vertical);
+        res.push(new_relative_event(RelativeAxisType::REL_WHEEL, -v));
+        res.push(new_relative_event(
+            RelativeAxisType::REL_WHEEL_HI_RES,
+            -v120,
+        ));
     }
     if ev.has_axis(Axis::Horizontal) {
-        res.push(f(Axis::Horizontal));
+        let (v, v120) = f(Axis::Horizontal);
+        res.push(new_relative_event(RelativeAxisType::REL_HWHEEL, v));
+        res.push(new_relative_event(
+            RelativeAxisType::REL_HWHEEL_HI_RES,
+            v120,
+        ));
     }
     res
 }
 
 fn convert_scroll_event(ev: &impl PointerScrollEvent) -> Vec<InputEvent> {
-    dispatch_scroll_event(ev, |axis| match axis {
-        Axis::Vertical => new_relative_event(RelativeAxisType::REL_WHEEL, ev.scroll_value(axis)),
-        Axis::Horizontal => new_relative_event(RelativeAxisType::REL_HWHEEL, ev.scroll_value(axis)),
+    dispatch_scroll_event(ev, |axis| {
+        (ev.scroll_value(axis), ev.scroll_value(axis) * 120.0)
     })
 }
 
 fn convert_wheel_event(ev: &PointerScrollWheelEvent) -> Vec<InputEvent> {
-    let mut res = convert_scroll_event(ev);
-    res.append(&mut dispatch_scroll_event(ev, |axis| match axis {
-        Axis::Vertical => new_relative_event(
-            RelativeAxisType::REL_WHEEL_HI_RES,
-            ev.scroll_value_v120(axis),
-        ),
-        Axis::Horizontal => new_relative_event(
-            RelativeAxisType::REL_HWHEEL_HI_RES,
-            ev.scroll_value_v120(axis),
-        ),
-    }));
-    res
+    dispatch_scroll_event(ev, |axis| {
+        (ev.scroll_value(axis), ev.scroll_value_v120(axis))
+    })
 }
 
 fn convert_button(ev: &PointerButtonEvent, cfg: &config::Device) -> Vec<InputEvent> {
