@@ -33,7 +33,7 @@ impl<'a> App<'a> {
         }
     }
 
-    pub fn event_loop(&mut self) -> Result<(), Error> {
+    pub fn main_loop(&mut self) -> Result<(), Error> {
         let mut libinput =
             Libinput::new_with_udev(AppLibinputInterface::new(self.device_fd_map.clone()));
         libinput

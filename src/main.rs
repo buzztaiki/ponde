@@ -27,6 +27,6 @@ fn main() -> anyhow::Result<()> {
     let config = Config::load(Path::new(&args[0])).context("failed to load config")?;
     let sink_device = SinkDevice::create("ponde").context("failed to create sink device")?;
     let mut app = App::new(&config, sink_device);
-    app.event_loop()?;
+    app.main_loop()?;
     Ok(())
 }
