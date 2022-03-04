@@ -1,6 +1,7 @@
+use std::cell::RefCell;
 use std::os::unix::prelude::*;
 use std::path::Path;
-use std::sync::{Arc, Mutex};
+use std::rc::Rc;
 
 use input::event::{DeviceEvent, EventTrait};
 use input::Event;
@@ -14,7 +15,7 @@ use crate::errors::Error;
 use crate::sink_device::SinkDevice;
 use crate::sink_event::SinkEvent;
 
-type DeviceFdMapPtr = Arc<Mutex<DeviceFdMap>>;
+type DeviceFdMapPtr = Rc<RefCell<DeviceFdMap>>;
 
 pub struct App<'a> {
     config: &'a Config,
@@ -24,7 +25,7 @@ pub struct App<'a> {
 
 impl<'a> App<'a> {
     pub fn new(config: &'a Config, sink_device: SinkDevice) -> Self {
-        let device_fd_map = Arc::new(Mutex::new(DeviceFdMap::default()));
+        let device_fd_map = Rc::new(RefCell::new(DeviceFdMap::default()));
         Self {
             config,
             device_fd_map,
@@ -69,10 +70,10 @@ impl<'a> App<'a> {
         match event {
             Event::Device(DeviceEvent::Added(_)) => {
                 device_config.apply_to(&mut device)?;
-                let mut map = self.device_fd_map.lock().unwrap();
+                let mut map = self.device_fd_map.borrow_mut();
                 let device_fd = map.get_by_name_mut(device.sysname()).ok_or_else(|| {
                     Error::Message(format!(
-                        "failed to get device_fd of {} ({})",
+                        "failed to get device_fd: {} ({})",
                         device.sysname(),
                         device.name()
                     ))
@@ -106,16 +107,14 @@ impl AppLibinputInterface {
 impl LibinputInterface for AppLibinputInterface {
     fn open_restricted(&mut self, path: &Path, flags: i32) -> Result<RawFd, i32> {
         let fd = self.iface.open_restricted(path, flags)?;
-        let mut map = self.device_fd_map.lock().unwrap();
         if let Some(device_fd) = DeviceFd::new(fd, path) {
-            map.insert(device_fd);
+            self.device_fd_map.borrow_mut().insert(device_fd);
         }
         Ok(fd)
     }
 
     fn close_restricted(&mut self, fd: RawFd) {
         self.iface.close_restricted(fd);
-        let mut map = self.device_fd_map.lock().unwrap();
-        map.remove_by_fd(fd);
+        self.device_fd_map.borrow_mut().remove_by_fd(fd);
     }
 }
