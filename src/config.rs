@@ -40,26 +40,16 @@ mod tests {
 
     #[test]
     fn test_empty() {
-        let device_info = DeviceInfo {
-            name: "moo".to_string(),
-            pointer: true,
-            gesture: false,
-        };
-
+        let device_info = DeviceInfo::of_mouse("moo");
         let config = Config { devices: vec![] };
         assert!(config.matched_device(&device_info).is_none());
     }
 
     #[test]
     fn test_found_device() {
-        let device_info = DeviceInfo {
-            name: "moo".to_string(),
-            pointer: true,
-            gesture: false,
-        };
-
+        let device_info = DeviceInfo::of_mouse("moo");
         let mut device_config = Device::default();
-        device_config.match_rule.name = "moo".to_string();
+        device_config.match_rule.name = device_info.name.clone();
         let config = Config {
             devices: vec![device_config],
         };

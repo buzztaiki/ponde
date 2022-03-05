@@ -98,50 +98,6 @@ impl Device {
     }
 
     pub fn matches(&self, device_info: &DeviceInfo) -> bool {
-        device_info.pointer && !device_info.gesture && self.match_rule.matches(device_info)
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn new_device_config(match_name: &str) -> Device {
-        Device {
-            match_rule: MatchRule {
-                name: match_name.to_string(),
-            },
-            ..Default::default()
-        }
-    }
-
-    #[test]
-    fn test_pointer_device() {
-        let device_info = DeviceInfo {
-            name: "moo".to_string(),
-            pointer: true,
-            gesture: false,
-        };
-        assert!(new_device_config("moo").matches(&device_info));
-    }
-
-    #[test]
-    fn test_non_pointer_device() {
-        let device_info = DeviceInfo {
-            name: "moo".to_string(),
-            pointer: false,
-            gesture: false,
-        };
-        assert!(!new_device_config("moo").matches(&device_info));
-    }
-
-    #[test]
-    fn test_gesture_device() {
-        let device_info = DeviceInfo {
-            name: "moo".to_string(),
-            pointer: true,
-            gesture: true,
-        };
-        assert!(!new_device_config("moo").matches(&device_info));
+        self.match_rule.matches(device_info)
     }
 }

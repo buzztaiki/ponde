@@ -8,7 +8,7 @@ pub struct MatchRule {
 }
 
 impl MatchRule {
-    pub fn matches(&self, device: &DeviceInfo) -> bool {
-        device.pointer && !device.gesture && device.name == self.name
+    pub fn matches(&self, device_info: &DeviceInfo) -> bool {
+        device_info.is_mouse() && device_info.name == self.name
     }
 }
