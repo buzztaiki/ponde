@@ -28,6 +28,7 @@ pub struct Device {
     // /// If the option is a list of button number pairs, the first number of each number pair is the lock button, the second number the logical button number to be locked. See section BUTTON DRAG LOCK for details.
     // /// For both meta and button pair configuration, the button numbers are device button numbers, i.e. the ButtonMapping applies after drag lock.
     // pub drag_lock_buttons: Option<Vec<u8>>,
+
     /// Enables left-handed button orientation, i.e. swapping left and right buttons.
     pub left_handed: Option<bool>,
 
@@ -43,7 +44,7 @@ pub struct Device {
     /// Designates a button as scroll button. If the button is logically down, x/y axis movement is converted into scroll events.
     pub scroll_button: Option<Button>,
 
-    /// Enables or disables the scroll button lock. If enabled, the ScrollButton is considered logically down after the first click and remains down until the second click of that button. If disabled (the default), the ScrollButton button is considered logically down while held down and up once physically released.
+    /// Enables or disables the scroll button lock. If enabled, the `scroll_button` is considered logically down after the first click and remains down until the second click of that button. If disabled (the default), the `scroll_button` is considered logically down while held down and up once physically released.
     pub scroll_button_lock: Option<bool>,
 }
 
