@@ -1,0 +1,10 @@
+[Unit]
+Description=Pointing device configurationd daemon
+
+[Service]
+Type=simple
+ExecStart=%h/.cargo/bin/ponde %h/.config/ponde/config.yaml
+Restart=always
+
+[Install]
+WantedBy=default.target
