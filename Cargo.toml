@@ -2,8 +2,8 @@
 name = "ponde"
 version = "0.1.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+license = "MIT"
+description = "Pointing device configurationd daemon for Wayland and X11 using libinput and uinput."
 
 [dependencies]
 anyhow = "1.0.47"
