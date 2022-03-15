@@ -15,7 +15,6 @@ nix = "0.23.0"
 serde = { version = "1.0.132", features = ["derive"] }
 serde_yaml = "0.8.23"
 thiserror = "1.0.30"
-udev = "0.6.2"
 
 [dev-dependencies]
 serde_test = "1.0.136"
