@@ -2,7 +2,7 @@
 
 Pointing device configurationd daemon for Wayland and X11 using libinput and uinput.
 
-It can do the same configiration as [https://gitlab.freedesktop.org/xorg/driver/xf86-input-libinput](xf86-input-libinput).
+It can do the same configiration as [xf86-input-libinput](https://gitlab.freedesktop.org/xorg/driver/xf86-input-libinput).
 
 ## Motivation
 
