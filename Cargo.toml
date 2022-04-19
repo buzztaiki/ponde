@@ -11,7 +11,7 @@ anyhow = "1.0.56"
 clap = { version = "3.1.9", features = ["derive"] }
 evdev = "0.11.4"
 input = "0.7.1"
-libc = "0.2.123"
+libc = "0.2.124"
 nix = "0.23.1"
 serde = { version = "1.0.136", features = ["derive"] }
 serde_yaml = "0.8.23"
