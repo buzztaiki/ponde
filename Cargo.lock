@@ -102,7 +102,7 @@ checksum = "21eef104bd659ef808f1f84bed9a924e1aebcdd066845b377cd3b52cc497bb9f"
 dependencies = [
  "bitvec",
  "libc",
- "nix",
+ "nix 0.23.1",
 ]
 
 [[package]]
@@ -224,6 +224,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "nix"
+version = "0.24.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8f6d99b651ff9697d6710f9613a07c5b4e0d655040faf56b3b471af108d55597"
+dependencies = [
+ "bitflags",
+ "cfg-if",
+ "libc",
+ "memoffset",
+]
+
+[[package]]
 name = "os_str_bytes"
 version = "6.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -244,7 +256,7 @@ dependencies = [
  "evdev",
  "input",
  "libc",
- "nix",
+ "nix 0.24.0",
  "serde",
  "serde_test",
  "serde_yaml",
