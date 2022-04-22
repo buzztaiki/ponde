@@ -24,8 +24,7 @@ $ cargo install ponde
 $ sudo ponde /path/to/config.yaml
 ```
 
-
-## Configuration
+## Configuration example
 
 Example configuration is here:
 
@@ -64,6 +63,52 @@ devices:
 - `rotation_angle`: Sets the rotation angle of the device to the given angle, in degrees clockwise. The angle must be between 0.0 (inclusive) and 360.0 (exclusive).
 - `scroll_button`: Designates a button as scroll button. If the button is logically down, x/y axis movement is converted into scroll events.
 - `scroll_button_lock`: Enables or disables the scroll button lock. If enabled, the `scroll_button` is considered logically down after the first click and remains down until the second click of that button. If disabled (the default), the `scroll_button` is considered logically down while held down and up once physically released.
+
+
+## Systemd user service
+
+To run as a systemd user service, you need to give permission to ordinary users to manipulate `/dev/uinput`.
+
+Write the following in `/etc/modules-load.d/uinput.conf` to explicitly load the uinput kernel module at OS boot:
+
+```
+uinput
+```
+
+Write the following udev rule in `/etc/udev/rules.d/99-uinput.rules` to grant permission to the `input` group to read/write `/dev/uinput` when the uinput kernel module is loaded (you can change it to another group if you prefer):
+
+```
+KERNEL=="uinput", ACTION=="add", GROUP="input", MODE="0660"
+```
+
+Make the user belong to the `input` group:
+
+```console
+% sudo gpasswd -a input $USER
+```
+
+Write the following systemd user service configuration in `~/.config/systemd/user/ponde.service`:
+
+```conf
+[Unit]
+Description=Pointing device configurationd daemon
+
+[Service]
+Type=simple
+ExecStart=%h/.cargo/bin/ponde %h/.config/ponde/config.yaml
+Restart=always
+
+[Install]
+WantedBy=default.target
+```
+
+Enable `ponde.service` and reboot:
+
+```code
+% systemctl --user daemon-reload
+% systemctl --user enable ponde.service
+% sudo systemctl reboot
+```
 
 
 ## Avoid conflicts with Wayland compositor and X11 settings
