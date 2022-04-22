@@ -8,7 +8,7 @@ repository = "https://github.com/buzztaiki/ponde"
 
 [dependencies]
 anyhow = "1.0.57"
-clap = { version = "3.1.10", features = ["derive"] }
+clap = { version = "3.1.12", features = ["derive"] }
 evdev = "0.11.4"
 input = "0.7.1"
 libc = "0.2.124"
