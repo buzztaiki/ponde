@@ -18,4 +18,4 @@ serde_yaml = "0.8.23"
 thiserror = "1.0.30"
 
 [dev-dependencies]
-serde_test = "1.0.136"
+serde_test = "1.0.137"
