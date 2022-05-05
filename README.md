@@ -1,4 +1,5 @@
 # Ponde
+![Crates.io](https://img.shields.io/crates/v/ponde)
 
 Pointing device configurationd daemon for Wayland and X11 using libinput and uinput.
 
