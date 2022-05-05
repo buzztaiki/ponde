@@ -15,7 +15,7 @@ libc = "0.2.124"
 nix = "0.24.1"
 serde = { version = "1.0.137", features = ["derive"] }
 serde_yaml = "0.8.23"
-thiserror = "1.0.30"
+thiserror = "1.0.31"
 
 [dev-dependencies]
 serde_test = "1.0.137"
