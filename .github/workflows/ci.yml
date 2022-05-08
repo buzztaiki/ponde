@@ -2,39 +2,40 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build-in-archlinux:
-    container:
-      image: archlinux:base-devel
+  build:
+    strategy:
+      matrix:
+        runner-image:
+          - archlinux:base-devel
+          - ubuntu:22.04
     runs-on: ubuntu-latest
+    container: ${{ matrix.runner-image }}
 
     steps:
       - uses: actions/checkout@v3
-      - name: System dependencies
+      - name: System dependencies (Arch)
+        if: ${{ startsWith( matrix.runner-image, 'archlinux:') }}
         run: |
           pacman -Syy
-          pacman -S --noconfirm udev libinput rust
+          pacman -S --noconfirm udev libinput
+      - name: System dependencies (Ubuntu)
+        if: ${{ startsWith( matrix.runner-image, 'ubuntu:') }}
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends build-essential libudev-dev libinput-dev curl ca-certificates
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
       - name: Build
         run: cargo build --verbose
       - name: Run tests
         run: cargo test --verbose
-
-#  build-in-ubuntu:
-#    container:
-#      image: archlinux:latest
-#    runs-on: ubuntu-latest
-#
-#    steps:
-#      - uses: actions/checkout@v3
-#      - name: System dependencies
-#        run: sudo apt-get install libudev-dev libinput-dev
-#      - name: Build
-#        run: cargo build --verbose
-#      - name: Run tests
-#        run: cargo test --verbose
