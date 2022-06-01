@@ -9,7 +9,7 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
+  build-and-test:
     strategy:
       matrix:
         runner-image:
@@ -20,22 +20,48 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+
       - name: System dependencies (Arch)
         if: ${{ startsWith( matrix.runner-image, 'archlinux:') }}
         run: |
           pacman -Syy
           pacman -S --noconfirm udev libinput
+
       - name: System dependencies (Ubuntu)
         if: ${{ startsWith( matrix.runner-image, 'ubuntu:') }}
         run: |
           apt-get update
           apt-get install -y --no-install-recommends build-essential libudev-dev libinput-dev curl ca-certificates
+
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           profile: minimal
+
       - name: Build
         run: cargo build --verbose
-      - name: Run tests
-        run: cargo test --verbose
+
+      - name: Test
+        uses: actions-rs/tarpaulin@v0.1
+        with:
+          out-type: Lcov
+          args: --ignore-tests
+
+      - name: Coveralls
+        uses: coverallsapp/github-action@1.1.3
+        with:
+          github-token: ${{ secrets.github_token }}
+          flag-name: matrix-${{ matrix.runner-image }}
+          parallel: true
+
+  finish:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Coveralls Finished
+        uses: coverallsapp/github-action@1.1.3
+        with:
+          github-token: ${{ secrets.github_token }}
+          path-to-lcov: ./lcov.info
+          parallel-finished: true
