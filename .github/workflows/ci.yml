@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ${{ matrix.runner-image }}
-      options: --security-opt seccomp=.github/seccomp-profile.json
+      options: --security-opt seccomp=unconfined
 
     steps:
       - uses: actions/checkout@v3
