@@ -16,7 +16,9 @@ jobs:
           - archlinux:base-devel
           - ubuntu:22.04
     runs-on: ubuntu-latest
-    container: ${{ matrix.runner-image }}
+    container:
+      image: ${{ matrix.runner-image }}
+      options: --security-opt seccomp=.github/seccomp-profile.json
 
     steps:
       - uses: actions/checkout@v3
