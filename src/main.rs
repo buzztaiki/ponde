@@ -18,7 +18,7 @@ mod sink_event;
 #[derive(Parser, Debug)]
 #[clap(author, version)]
 struct Args {
-    config_file: PathBuf
+    config_file: PathBuf,
 }
 
 fn main() -> anyhow::Result<()> {

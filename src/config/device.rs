@@ -22,13 +22,6 @@ pub struct Device {
     /// Sets the logical button mapping for this device.
     pub button_mapping: Option<HashMap<Button, Button>>,
 
-    // TODO
-    // /// Sets "drag lock buttons" that simulate a button logically down even when it has been physically released. To logically release a locked button, a second click of the same button is required.
-    // /// If the option is a single button number, that button acts as the "meta" locking button for the next button number. See section BUTTON DRAG LOCK for details.
-    // /// If the option is a list of button number pairs, the first number of each number pair is the lock button, the second number the logical button number to be locked. See section BUTTON DRAG LOCK for details.
-    // /// For both meta and button pair configuration, the button numbers are device button numbers, i.e. the ButtonMapping applies after drag lock.
-    // pub drag_lock_buttons: Option<Vec<u8>>,
-
     /// Enables left-handed button orientation, i.e. swapping left and right buttons.
     pub left_handed: Option<bool>,
 
