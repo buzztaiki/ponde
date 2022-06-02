@@ -58,7 +58,28 @@ jobs:
           path-to-lcov: lcov.info
           parallel: true
 
-  finish:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+          components: clippy, rustfmt
+
+      - name: Clippy
+        run: cargo clippy --all-targets --all-features
+        if: always()
+
+      - name: Rustfmt
+        run: cargo fmt --all --check
+        if: always()
+
+  coveralls-finished:
     needs: build-and-test
     runs-on: ubuntu-latest
     steps:
