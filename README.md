@@ -1,5 +1,6 @@
 # Ponde
 [![Crates.io](https://img.shields.io/crates/v/ponde)](https://crates.io/crates/ponde)
+[![CI](https://github.com/buzztaiki/ponde/actions/workflows/ci.yml/badge.svg)](https://github.com/buzztaiki/ponde/actions/workflows/ci.yml)
 
 
 Pointing device configurationd daemon for Wayland and X11 using libinput and uinput.
