@@ -7,7 +7,7 @@ description = "Pointing device configurationd daemon for Wayland and X11 using l
 repository = "https://github.com/buzztaiki/ponde"
 
 [dependencies]
-anyhow = "1.0.58"
+anyhow = "1.0.60"
 clap = { version = "3.2.14", features = ["derive", "deprecated"] }
 evdev = "0.11.4"
 input = "0.7.1"
