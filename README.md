@@ -3,7 +3,7 @@
 [![CI](https://github.com/buzztaiki/ponde/actions/workflows/ci.yml/badge.svg)](https://github.com/buzztaiki/ponde/actions/workflows/ci.yml)
 
 
-Pointing device configurationd daemon for Wayland and X11 using libinput and uinput.
+Pointing device configuration daemon for Wayland and X11 using libinput and uinput.
 
 It can do the similar configiration as [xf86-input-libinput](https://gitlab.freedesktop.org/xorg/driver/xf86-input-libinput).
 
