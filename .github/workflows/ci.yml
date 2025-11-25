@@ -49,7 +49,7 @@ jobs:
         run: cargo llvm-cov --lcov --output-path lcov.info
 
       - name: Coveralls
-        uses: coverallsapp/github-action@v1.2.4
+        uses: coverallsapp/github-action@v2.3.7
         with:
           github-token: ${{ secrets.github_token }}
           flag-name: matrix-${{ matrix.runner-image }}
@@ -88,7 +88,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Coveralls Finished
-        uses: coverallsapp/github-action@v1.2.4
+        uses: coverallsapp/github-action@v2.3.7
         with:
           github-token: ${{ secrets.github_token }}
           parallel-finished: true
