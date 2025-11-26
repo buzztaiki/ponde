@@ -21,7 +21,7 @@ pub struct Config {
 
 impl Config {
     pub fn load(path: &Path) -> Result<Self, Error> {
-        let f = std::fs::File::open(&path)?;
+        let f = std::fs::File::open(path)?;
         let config = serde_yaml::from_reader(&f)?;
         Ok(config)
     }
