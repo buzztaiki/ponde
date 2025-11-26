@@ -19,7 +19,7 @@ jobs:
     container: ${{ matrix.runner-image }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
 
       - name: System dependencies (Arch)
         if: ${{ startsWith( matrix.runner-image, 'archlinux:') }}
@@ -61,7 +61,7 @@ jobs:
     container: archlinux:base-devel
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
 
       - name: System dependencies
         run: pacman -Syy --noconfirm udev libinput systemd-sysvcompat
