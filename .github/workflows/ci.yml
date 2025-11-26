@@ -32,11 +32,8 @@ jobs:
           apt-get install -y --no-install-recommends build-essential libudev-dev libinput-dev curl ca-certificates
 
       - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
+        uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          toolchain: stable
-          profile: minimal
-          override: true
           components: llvm-tools-preview
 
       - name: Install cargo-llvm-cov
@@ -67,11 +64,8 @@ jobs:
         run: pacman -Syy --noconfirm udev libinput systemd-sysvcompat
 
       - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
+        uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          toolchain: stable
-          profile: minimal
-          override: true
           components: clippy, rustfmt
 
       - name: Clippy
