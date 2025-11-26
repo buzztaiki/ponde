@@ -23,7 +23,7 @@ jobs:
 
       - name: System dependencies (Arch)
         if: ${{ startsWith( matrix.runner-image, 'archlinux:') }}
-        run: pacman -Syy --noconfirm udev libinput
+        run: pacman -Syy --noconfirm udev libinput systemd-sysvcompat
 
       - name: System dependencies (Ubuntu)
         if: ${{ startsWith( matrix.runner-image, 'ubuntu:') }}
@@ -64,7 +64,7 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: System dependencies
-        run: pacman -Syy --noconfirm udev libinput
+        run: pacman -Syy --noconfirm udev libinput systemd-sysvcompat
 
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
@@ -81,7 +81,6 @@ jobs:
       - name: Rustfmt
         run: cargo fmt --all --check
         if: always()
-
 
   coveralls-finished:
     needs: build-and-test
