@@ -1,4 +1,4 @@
-use evdev::uinput::{VirtualDevice, VirtualDeviceBuilder};
+use evdev::uinput::VirtualDevice;
 use evdev::{AttributeSet, KeyCode, RelativeAxisCode};
 
 use crate::errors::Error;
@@ -22,7 +22,7 @@ impl SinkDevice {
             rel_axes.insert(RelativeAxisCode(code));
         }
 
-        let vdevice = VirtualDeviceBuilder::new()?
+        let vdevice = VirtualDevice::builder()?
             .name(name)
             .with_keys(&keys)?
             .with_relative_axes(&rel_axes)?
