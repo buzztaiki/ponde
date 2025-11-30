@@ -1,5 +1,5 @@
-use evdev::uinput::{VirtualDevice, VirtualDeviceBuilder};
-use evdev::{AttributeSet, Key, RelativeAxisType};
+use evdev::uinput::VirtualDevice;
+use evdev::{AttributeSet, KeyCode, RelativeAxisCode};
 
 use crate::errors::Error;
 use crate::sink_event::SinkEvent;
@@ -11,18 +11,18 @@ pub struct SinkDevice {
 
 impl SinkDevice {
     pub fn create(name: &str) -> Result<Self, Error> {
-        let mut keys = AttributeSet::<Key>::new();
+        let mut keys = AttributeSet::<KeyCode>::new();
         // Note: when keyboard keys are enabled, it is not detected as a mouse
-        for code in Key::BTN_0.code()..=Key::BTN_THUMBR.code() {
-            keys.insert(Key::new(code));
+        for code in KeyCode::BTN_0.code()..=KeyCode::BTN_THUMBR.code() {
+            keys.insert(KeyCode::new(code));
         }
 
-        let mut rel_axes = AttributeSet::<RelativeAxisType>::new();
-        for code in RelativeAxisType::REL_X.0..=RelativeAxisType::REL_HWHEEL_HI_RES.0 {
-            rel_axes.insert(RelativeAxisType(code));
+        let mut rel_axes = AttributeSet::<RelativeAxisCode>::new();
+        for code in RelativeAxisCode::REL_X.0..=RelativeAxisCode::REL_HWHEEL_HI_RES.0 {
+            rel_axes.insert(RelativeAxisCode(code));
         }
 
-        let vdevice = VirtualDeviceBuilder::new()?
+        let vdevice = VirtualDevice::builder()?
             .name(name)
             .with_keys(&keys)?
             .with_relative_axes(&rel_axes)?

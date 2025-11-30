@@ -1,9 +1,10 @@
 use std::str::FromStr;
 
+use evdev::KeyCode;
 use serde::{Deserialize, Deserializer};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct Button(evdev::Key);
+pub struct Button(KeyCode);
 
 impl<'de> Deserialize<'de> for Button {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
@@ -11,7 +12,7 @@ impl<'de> Deserialize<'de> for Button {
         D: Deserializer<'de>,
     {
         let s = String::deserialize(deserializer)?;
-        evdev::Key::from_str(&s)
+        KeyCode::from_str(&s)
             .ok()
             .filter(|_| s.starts_with("BTN_"))
             .map(Self)
@@ -21,7 +22,7 @@ impl<'de> Deserialize<'de> for Button {
 
 impl Button {
     pub fn from_code(code: u16) -> Self {
-        Self(evdev::Key::new(code))
+        Self(KeyCode::new(code))
     }
 
     pub fn code(&self) -> u16 {
@@ -36,7 +37,7 @@ mod tests {
 
     #[test]
     fn test_de_button() {
-        assert_de_tokens(&Button(evdev::Key::BTN_LEFT), &[Token::Str("BTN_LEFT")]);
+        assert_de_tokens(&Button(KeyCode::BTN_LEFT), &[Token::Str("BTN_LEFT")]);
     }
 
     #[test]

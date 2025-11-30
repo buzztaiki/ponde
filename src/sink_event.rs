@@ -1,4 +1,4 @@
-use evdev::{AbsoluteAxisType, EventType, InputEvent, RelativeAxisType};
+use evdev::{AbsoluteAxisCode, EventType, InputEvent, RelativeAxisCode};
 use input::event::pointer::{
     Axis, ButtonState, PointerButtonEvent, PointerScrollEvent, PointerScrollWheelEvent,
 };
@@ -23,12 +23,12 @@ impl SinkEvent {
     ) -> Result<Self, Error> {
         match event {
             PointerEvent::Motion(ev) => Ok(Self(vec![
-                new_relative_event(RelativeAxisType::REL_X, ev.dx()),
-                new_relative_event(RelativeAxisType::REL_Y, ev.dy()),
+                new_relative_event(RelativeAxisCode::REL_X, ev.dx()),
+                new_relative_event(RelativeAxisCode::REL_Y, ev.dy()),
             ])),
             PointerEvent::MotionAbsolute(ev) => Ok(Self(vec![
-                new_absolute_event(AbsoluteAxisType::ABS_X, ev.absolute_x()),
-                new_absolute_event(AbsoluteAxisType::ABS_Y, ev.absolute_y()),
+                new_absolute_event(AbsoluteAxisCode::ABS_X, ev.absolute_x()),
+                new_absolute_event(AbsoluteAxisCode::ABS_Y, ev.absolute_y()),
             ])),
             PointerEvent::Button(ev) => Ok(Self(convert_button(ev, device_config))),
             PointerEvent::ScrollWheel(ev) => Ok(Self(convert_wheel_event(ev))),
@@ -48,17 +48,17 @@ impl SinkEvent {
     }
 }
 
-fn new_relative_event(axis_type: RelativeAxisType, value: f64) -> InputEvent {
-    InputEvent::new(EventType::RELATIVE, axis_type.0, value as i32)
+fn new_relative_event(axis_type: RelativeAxisCode, value: f64) -> InputEvent {
+    InputEvent::new(EventType::RELATIVE.0, axis_type.0, value as i32)
 }
 
-fn new_absolute_event(axis_type: AbsoluteAxisType, value: f64) -> InputEvent {
-    InputEvent::new(EventType::ABSOLUTE, axis_type.0, value as i32)
+fn new_absolute_event(axis_type: AbsoluteAxisCode, value: f64) -> InputEvent {
+    InputEvent::new(EventType::ABSOLUTE.0, axis_type.0, value as i32)
 }
 
 fn new_button_event(button: u16, state: ButtonState) -> InputEvent {
     InputEvent::new(
-        EventType::KEY,
+        EventType::KEY.0,
         button,
         match state {
             ButtonState::Pressed => 1,
@@ -74,17 +74,17 @@ fn dispatch_scroll_event(
     let mut res = Vec::new();
     if ev.has_axis(Axis::Vertical) {
         let (v, v120) = f(Axis::Vertical);
-        res.push(new_relative_event(RelativeAxisType::REL_WHEEL, -v));
+        res.push(new_relative_event(RelativeAxisCode::REL_WHEEL, -v));
         res.push(new_relative_event(
-            RelativeAxisType::REL_WHEEL_HI_RES,
+            RelativeAxisCode::REL_WHEEL_HI_RES,
             -v120,
         ));
     }
     if ev.has_axis(Axis::Horizontal) {
         let (v, v120) = f(Axis::Horizontal);
-        res.push(new_relative_event(RelativeAxisType::REL_HWHEEL, v));
+        res.push(new_relative_event(RelativeAxisCode::REL_HWHEEL, v));
         res.push(new_relative_event(
-            RelativeAxisType::REL_HWHEEL_HI_RES,
+            RelativeAxisCode::REL_HWHEEL_HI_RES,
             v120,
         ));
     }
