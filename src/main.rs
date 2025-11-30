@@ -16,7 +16,7 @@ mod sink_device;
 mod sink_event;
 
 #[derive(Parser, Debug)]
-#[clap(author, version)]
+#[command(author, version)]
 struct Args {
     config_file: PathBuf,
 }
