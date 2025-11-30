@@ -40,7 +40,9 @@ impl<'a> App<'a> {
             .udev_assign_seat("seat0")
             .expect("failed to assign seat");
 
-        let mut poll_fds = [PollFd::new(libinput.as_raw_fd(), PollFlags::POLLIN)];
+        let libinput_for_poll = libinput.clone();
+        let mut poll_fds = [PollFd::new(&libinput_for_poll, PollFlags::POLLIN)];
+
         while poll(&mut poll_fds, -1)? > -1 {
             libinput.dispatch()?;
             for event in &mut libinput {
