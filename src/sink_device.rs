@@ -1,5 +1,5 @@
 use evdev::uinput::{VirtualDevice, VirtualDeviceBuilder};
-use evdev::{AttributeSet, Key, RelativeAxisType};
+use evdev::{AttributeSet, Key, RelativeAxisCode};
 
 use crate::errors::Error;
 use crate::sink_event::SinkEvent;
@@ -17,9 +17,9 @@ impl SinkDevice {
             keys.insert(Key::new(code));
         }
 
-        let mut rel_axes = AttributeSet::<RelativeAxisType>::new();
-        for code in RelativeAxisType::REL_X.0..=RelativeAxisType::REL_HWHEEL_HI_RES.0 {
-            rel_axes.insert(RelativeAxisType(code));
+        let mut rel_axes = AttributeSet::<RelativeAxisCode>::new();
+        for code in RelativeAxisCode::REL_X.0..=RelativeAxisCode::REL_HWHEEL_HI_RES.0 {
+            rel_axes.insert(RelativeAxisCode(code));
         }
 
         let vdevice = VirtualDeviceBuilder::new()?
