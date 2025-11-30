@@ -49,16 +49,16 @@ impl SinkEvent {
 }
 
 fn new_relative_event(axis_type: RelativeAxisCode, value: f64) -> InputEvent {
-    InputEvent::new(EventType::RELATIVE, axis_type.0, value as i32)
+    InputEvent::new(EventType::RELATIVE.0, axis_type.0, value as i32)
 }
 
 fn new_absolute_event(axis_type: AbsoluteAxisCode, value: f64) -> InputEvent {
-    InputEvent::new(EventType::ABSOLUTE, axis_type.0, value as i32)
+    InputEvent::new(EventType::ABSOLUTE.0, axis_type.0, value as i32)
 }
 
 fn new_button_event(button: u16, state: ButtonState) -> InputEvent {
     InputEvent::new(
-        EventType::KEY,
+        EventType::KEY.0,
         button,
         match state {
             ButtonState::Pressed => 1,
