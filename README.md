@@ -78,16 +78,10 @@ Write the following in `/etc/modules-load.d/uinput.conf` to explicitly load the 
 uinput
 ```
 
-Write the following udev rule in `/etc/udev/rules.d/99-uinput.rules` to grant permission to the `input` group to read/write `/dev/uinput` when the uinput kernel module is loaded (you can change it to another group if you prefer):
+Write the following udev rule in `/etc/udev/rules.d/70-uinput.rules` to grant permission to a login user to read/write `/dev/uinput` when the uinput kernel module is loaded:
 
 ```
-KERNEL=="uinput", ACTION=="add", GROUP="input", MODE="0660"
-```
-
-Make the user belong to the `input` group:
-
-```console
-% sudo gpasswd -a input $USER
+KERNEL=="uinput", MODE="0660", TAG+="uaccess"
 ```
 
 Write the following systemd user service configuration in `~/.config/systemd/user/ponde.service`:
