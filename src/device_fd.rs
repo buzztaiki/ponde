@@ -1,4 +1,5 @@
 use std::io;
+use std::os::fd::{AsFd, AsRawFd};
 use std::os::unix::prelude::RawFd;
 use std::path::Path;
 
@@ -11,22 +12,22 @@ ioctl_write_int!(eviocgrab, b'E', 0x90);
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct DeviceFd {
-    fd: RawFd,
+    raw_fd: RawFd,
     path: Box<Path>,
     name: String,
 }
 
 impl DeviceFd {
-    pub fn new(fd: RawFd, path: &Path) -> Option<Self> {
+    pub fn new(fd: impl AsFd, path: &Path) -> Option<Self> {
         path.file_name().and_then(|x| x.to_str()).map(|x| Self {
-            fd,
+            raw_fd: fd.as_fd().as_raw_fd(),
             path: path.into(),
             name: x.to_string(),
         })
     }
 
     pub fn grab(&mut self) -> Result<(), Error> {
-        unsafe { eviocgrab(self.fd, 1) }.map_err(io::Error::from)?;
+        unsafe { eviocgrab(self.raw_fd, 1) }.map_err(io::Error::from)?;
         Ok(())
     }
 }
@@ -41,7 +42,7 @@ impl DeviceFdMap {
         let mut i = 0;
         while i < self.values.len() {
             let value = &self.values[i];
-            if value.fd == device_fd.fd || value.name == device_fd.name {
+            if value.raw_fd == device_fd.raw_fd || value.name == device_fd.name {
                 self.values.remove(i);
             } else {
                 i += 1;
@@ -59,9 +60,9 @@ impl DeviceFdMap {
         self.values.iter_mut().find(|x| x.name == name)
     }
 
-    pub fn remove_by_fd(&mut self, fd: RawFd) -> Option<DeviceFd> {
+    pub fn remove_by_fd(&mut self, fd: impl AsFd) -> Option<DeviceFd> {
         for i in 0..self.values.len() {
-            if self.values[i].fd == fd {
+            if self.values[i].raw_fd == fd.as_fd().as_raw_fd() {
                 return Some(self.values.remove(i));
             }
         }
@@ -76,56 +77,67 @@ impl DeviceFdMap {
 
 #[cfg(test)]
 mod tests {
+    use std::os::fd::AsFd;
+
+    use tempfile::tempfile;
+
     use super::*;
 
-    fn new_device_fd(fd: RawFd, path: &Path) -> DeviceFd {
+    fn new_device_fd(fd: impl AsFd, path: &Path) -> DeviceFd {
         DeviceFd::new(fd, path).unwrap()
     }
 
     #[test]
     fn test_insert() {
         let mut map = DeviceFdMap::default();
-        map.insert(new_device_fd(1, Path::new("/dev/f1")));
-        map.insert(new_device_fd(2, Path::new("/dev/f2")));
+
+        let t1 = tempfile().unwrap();
+        let t2 = tempfile().unwrap();
+        let t3 = tempfile().unwrap();
+
+        map.insert(new_device_fd(&t1, Path::new("/dev/f1")));
+        map.insert(new_device_fd(&t2, Path::new("/dev/f2")));
         assert_eq!(map.len(), 2);
         assert_eq!(
             map.get_by_name("f1"),
-            Some(&new_device_fd(1, Path::new("/dev/f1")))
+            Some(&new_device_fd(&t1, Path::new("/dev/f1")))
         );
 
         // name should be a key
-        map.insert(new_device_fd(3, Path::new("/dev/f1")));
+        map.insert(new_device_fd(&t3, Path::new("/dev/f1")));
         assert_eq!(map.len(), 2);
         assert_eq!(
             map.get_by_name("f1"),
-            Some(&new_device_fd(3, Path::new("/dev/f1")))
+            Some(&new_device_fd(&t3, Path::new("/dev/f1")))
         );
 
         // fd should also be a key
-        map.insert(new_device_fd(3, Path::new("/dev/f3")));
+        map.insert(new_device_fd(&t3, Path::new("/dev/f3")));
         assert_eq!(map.len(), 2);
         assert_eq!(
             map.get_by_name("f3"),
-            Some(&new_device_fd(3, Path::new("/dev/f3")))
+            Some(&new_device_fd(&t3, Path::new("/dev/f3")))
         );
 
         // fd and path matches different entries, should remove both entries
-        map.insert(new_device_fd(3, Path::new("/dev/f2")));
+        map.insert(new_device_fd(&t3, Path::new("/dev/f2")));
         assert_eq!(map.len(), 1);
         assert_eq!(
             map.get_by_name("f2"),
-            Some(&new_device_fd(3, Path::new("/dev/f2")))
+            Some(&new_device_fd(&t3, Path::new("/dev/f2")))
         );
     }
 
     #[test]
     fn test_get_by_name() {
         let mut map = DeviceFdMap::default();
-        map.insert(new_device_fd(1, Path::new("f1/f1")));
+        let t1 = tempfile().unwrap();
+
+        map.insert(new_device_fd(&t1, Path::new("f1/f1")));
         assert_eq!(map.len(), 1);
         assert_eq!(
             map.get_by_name("f1"),
-            Some(&new_device_fd(1, Path::new("f1/f1")))
+            Some(&new_device_fd(&t1, Path::new("f1/f1")))
         );
         assert_eq!(map.get_by_name("f2"), None);
     }
@@ -133,24 +145,29 @@ mod tests {
     #[test]
     fn test_get_by_name_mut() {
         let mut map = DeviceFdMap::default();
-        map.insert(new_device_fd(1, Path::new("/dev/f1")));
+        let t1 = tempfile().unwrap();
+
+        map.insert(new_device_fd(&t1, Path::new("/dev/f1")));
         assert_eq!(map.len(), 1);
         assert_eq!(
             map.get_by_name_mut("f1"),
-            Some(&mut new_device_fd(1, Path::new("/dev/f1")))
+            Some(&mut new_device_fd(&t1, Path::new("/dev/f1")))
         );
     }
 
     #[test]
     fn test_remove_by_fd() {
         let mut map = DeviceFdMap::default();
-        map.insert(new_device_fd(1, Path::new("/dev/f1")));
-        map.insert(new_device_fd(2, Path::new("/dev/f2")));
+        let t1 = tempfile().unwrap();
+        let t2 = tempfile().unwrap();
+
+        map.insert(new_device_fd(&t1, Path::new("/dev/f1")));
+        map.insert(new_device_fd(&t2, Path::new("/dev/f2")));
         assert_eq!(
-            map.remove_by_fd(1),
-            Some(new_device_fd(1, Path::new("/dev/f1")))
+            map.remove_by_fd(&t1),
+            Some(new_device_fd(&t1, Path::new("/dev/f1")))
         );
-        assert_eq!(map.remove_by_fd(1), None);
+        assert_eq!(map.remove_by_fd(&t1), None);
         assert_eq!(map.len(), 1);
     }
 }

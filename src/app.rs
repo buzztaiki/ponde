@@ -107,16 +107,17 @@ impl AppLibinputInterface {
 }
 
 impl LibinputInterface for AppLibinputInterface {
-    fn open_restricted(&mut self, path: &Path, flags: i32) -> Result<RawFd, i32> {
+    fn open_restricted(&mut self, path: &Path, flags: i32) -> Result<OwnedFd, i32> {
         let fd = self.iface.open_restricted(path, flags)?;
-        if let Some(device_fd) = DeviceFd::new(fd, path) {
+        if let Some(device_fd) = DeviceFd::new(&fd, path) {
             self.device_fd_map.borrow_mut().insert(device_fd);
         }
+
         Ok(fd)
     }
 
-    fn close_restricted(&mut self, fd: RawFd) {
+    fn close_restricted(&mut self, fd: OwnedFd) {
+        self.device_fd_map.borrow_mut().remove_by_fd(&fd);
         self.iface.close_restricted(fd);
-        self.device_fd_map.borrow_mut().remove_by_fd(fd);
     }
 }
