@@ -6,7 +6,7 @@ use std::rc::Rc;
 use input::event::{DeviceEvent, EventTrait};
 use input::Event;
 use input::{Libinput, LibinputInterface};
-use nix::poll::{poll, PollFd, PollFlags};
+use nix::poll::{poll, PollFd, PollFlags, PollTimeout};
 
 use crate::config::Config;
 use crate::default_libinput_interface::DefaultLibinputInterface;
@@ -41,9 +41,9 @@ impl<'a> App<'a> {
             .expect("failed to assign seat");
 
         let libinput_for_poll = libinput.clone();
-        let mut poll_fds = [PollFd::new(&libinput_for_poll, PollFlags::POLLIN)];
+        let mut poll_fds = [PollFd::new(libinput_for_poll.as_fd(), PollFlags::POLLIN)];
 
-        while poll(&mut poll_fds, -1)? > -1 {
+        while poll(&mut poll_fds, PollTimeout::NONE)? > -1 {
             libinput.dispatch()?;
             for event in &mut libinput {
                 self.handle_event(&event)?;

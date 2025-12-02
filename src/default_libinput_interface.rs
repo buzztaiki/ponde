@@ -10,9 +10,7 @@ pub struct DefaultLibinputInterface {}
 
 impl LibinputInterface for DefaultLibinputInterface {
     fn open_restricted(&mut self, path: &Path, flags: i32) -> Result<OwnedFd, i32> {
-        open(path, OFlag::from_bits_truncate(flags), Mode::empty())
-            .map(|fd| unsafe { OwnedFd::from_raw_fd(fd) })
-            .map_err(|e| e as i32)
+        open(path, OFlag::from_bits_truncate(flags), Mode::empty()).map_err(|e| e as i32)
     }
 
     fn close_restricted(&mut self, fd: OwnedFd) {
