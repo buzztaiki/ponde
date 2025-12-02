@@ -12,7 +12,7 @@ It can do the similar configiration as [xf86-input-libinput](https://gitlab.free
 In Wayland, xf86-input-libinput is not available, and the pointing device settings are different for each compositor.
 Gnome Wayland allows the same settings as xf86-input-libinput, but does not allow mapping of buttons, nor does it allow per-device settings.
 
-I wrote this program to solve these problem.
+I wrote this tool to solve these problem.
 
 
 ## Install
