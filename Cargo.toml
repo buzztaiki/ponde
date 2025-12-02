@@ -2,7 +2,7 @@
 name = "ponde"
 version = "0.1.5"
 edition = "2021"
-description = "Pointing device configurationd daemon for Wayland and X11 using libinput and uinput."
+description = "Pointing device configuration daemon for Wayland and X11 using libinput and uinput."
 repository = "https://github.com/buzztaiki/ponde"
 license = "MIT"
 

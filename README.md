@@ -88,7 +88,7 @@ Write the following systemd user service configuration in `~/.config/systemd/use
 
 ```conf
 [Unit]
-Description=Pointing device configurationd daemon
+Description=Pointing device configuration daemon
 
 [Service]
 Type=simple
