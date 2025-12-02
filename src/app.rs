@@ -3,10 +3,10 @@ use std::os::unix::prelude::*;
 use std::path::Path;
 use std::rc::Rc;
 
-use input::event::{DeviceEvent, EventTrait};
 use input::Event;
+use input::event::{DeviceEvent, EventTrait};
 use input::{Libinput, LibinputInterface};
-use nix::poll::{poll, PollFd, PollFlags, PollTimeout};
+use nix::poll::{PollFd, PollFlags, PollTimeout, poll};
 
 use crate::config::Config;
 use crate::default_libinput_interface::DefaultLibinputInterface;
