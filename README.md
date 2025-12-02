@@ -63,7 +63,7 @@ devices:
 - `left_handed`: Enables left-handed button orientation, i.e. swapping left and right buttons.
 - `middle_emulation`: Enables middle button emulation. When enabled, pressing the left and right buttons simultaneously produces a middle mouse button click.
 - `natural_scrolling`: Enables or disables natural scrolling behavior.
-- `rotation_angle`: Sets the rotation angle of the device to the given angle, in degrees clockwise. The angle must be between 0.0 (inclusive) and 360.0 (exclusive).
+- `rotation_angle`: Sets the rotation angle of the device to the given angle, in degrees clockwise. The angle must be between 0 (inclusive) and 360 (exclusive).
 - `scroll_button`: Designates a button as scroll button. If the button is logically down, x/y axis movement is converted into scroll events.
 - `scroll_button_lock`: Enables or disables the scroll button lock. If enabled, the `scroll_button` is considered logically down after the first click and remains down until the second click of that button. If disabled (the default), the `scroll_button` is considered logically down while held down and up once physically released.
 

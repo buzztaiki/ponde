@@ -31,7 +31,7 @@ pub struct Device {
     /// Enables or disables natural scrolling behavior.
     pub natural_scrolling: Option<bool>,
 
-    /// Sets the rotation angle of the device to the given angle, in degrees clockwise. The angle must be between 0.0 (inclusive) and 360.0 (exclusive).
+    /// Sets the rotation angle of the device to the given angle, in degrees clockwise. The angle must be between 0 (inclusive) and 360 (exclusive).
     pub rotation_angle: Option<u32>,
 
     /// Designates a button as scroll button. If the button is logically down, x/y axis movement is converted into scroll events.
