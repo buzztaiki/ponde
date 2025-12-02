@@ -2,20 +2,20 @@
 name = "ponde"
 version = "0.1.5"
 edition = "2021"
-license = "MIT"
-description = "Pointing device configurationd daemon for Wayland and X11 using libinput and uinput."
+description = "Pointing device configuration daemon for Wayland and X11 using libinput and uinput."
 repository = "https://github.com/buzztaiki/ponde"
+license = "MIT"
 
 [dependencies]
 anyhow = "1.0.62"
-clap = { version = "4.5.53", features = ["derive", "deprecated"] }
+clap = { version = "4.5.53", features = ["deprecated", "derive"] }
 evdev = "0.13.2"
-input = "0.7.1"
-libc = "0.2.132"
-nix = "0.25.0"
+input = "0.9.1"
+nix = { version = "0.30.1", features = ["fs", "ioctl", "poll"] }
 serde = { version = "1.0.144", features = ["derive"] }
 serde_yaml = "0.9.10"
 thiserror = "2.0.17"
 
 [dev-dependencies]
 serde_test = "1.0.144"
+tempfile = "3.23.0"

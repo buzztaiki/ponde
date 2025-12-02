@@ -6,7 +6,7 @@ use std::rc::Rc;
 use input::event::{DeviceEvent, EventTrait};
 use input::Event;
 use input::{Libinput, LibinputInterface};
-use nix::poll::{poll, PollFd, PollFlags};
+use nix::poll::{poll, PollFd, PollFlags, PollTimeout};
 
 use crate::config::Config;
 use crate::default_libinput_interface::DefaultLibinputInterface;
@@ -40,8 +40,10 @@ impl<'a> App<'a> {
             .udev_assign_seat("seat0")
             .expect("failed to assign seat");
 
-        let mut poll_fds = [PollFd::new(libinput.as_raw_fd(), PollFlags::POLLIN)];
-        while poll(&mut poll_fds, -1)? > -1 {
+        let libinput_for_poll = libinput.clone();
+        let mut poll_fds = [PollFd::new(libinput_for_poll.as_fd(), PollFlags::POLLIN)];
+
+        while poll(&mut poll_fds, PollTimeout::NONE)? > -1 {
             libinput.dispatch()?;
             for event in &mut libinput {
                 self.handle_event(&event)?;
@@ -105,16 +107,17 @@ impl AppLibinputInterface {
 }
 
 impl LibinputInterface for AppLibinputInterface {
-    fn open_restricted(&mut self, path: &Path, flags: i32) -> Result<RawFd, i32> {
+    fn open_restricted(&mut self, path: &Path, flags: i32) -> Result<OwnedFd, i32> {
         let fd = self.iface.open_restricted(path, flags)?;
-        if let Some(device_fd) = DeviceFd::new(fd, path) {
+        if let Some(device_fd) = DeviceFd::new(&fd, path) {
             self.device_fd_map.borrow_mut().insert(device_fd);
         }
+
         Ok(fd)
     }
 
-    fn close_restricted(&mut self, fd: RawFd) {
+    fn close_restricted(&mut self, fd: OwnedFd) {
+        self.device_fd_map.borrow_mut().remove_by_fd(&fd);
         self.iface.close_restricted(fd);
-        self.device_fd_map.borrow_mut().remove_by_fd(fd);
     }
 }
