@@ -1,8 +1,8 @@
 use evdev::{AbsoluteAxisCode, EventType, InputEvent, RelativeAxisCode};
+use input::event::PointerEvent;
 use input::event::pointer::{
     Axis, ButtonState, PointerButtonEvent, PointerScrollEvent, PointerScrollWheelEvent,
 };
-use input::event::PointerEvent;
 
 use crate::config;
 use crate::errors::{self, Error};

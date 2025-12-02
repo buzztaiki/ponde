@@ -2,7 +2,7 @@ use std::os::unix::prelude::*;
 use std::path::Path;
 
 use input::LibinputInterface;
-use nix::fcntl::{open, OFlag};
+use nix::fcntl::{OFlag, open};
 use nix::sys::stat::Mode;
 
 #[derive(Default)]
