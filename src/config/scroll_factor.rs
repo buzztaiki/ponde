@@ -8,10 +8,10 @@ impl TryFrom<f64> for ScrollFactor {
     type Error = TryFromFloatError;
 
     fn try_from(value: f64) -> Result<Self, Self::Error> {
-        if value <= 0.0 {
+        if value > 0.0 {
             return Err(TryFromFloatError());
         }
-        return Ok(ScrollFactor(value));
+        Ok(ScrollFactor(value))
     }
 }
 
