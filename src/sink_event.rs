@@ -69,38 +69,26 @@ fn new_button_event(button: u16, state: ButtonState) -> InputEvent {
 
 fn dispatch_scroll_event(
     ev: &impl PointerScrollEvent,
-    f: impl Fn(Axis) -> (f64, f64),
+    scroll_value: impl Fn(Axis) -> f64,
 ) -> Vec<InputEvent> {
     let mut res = Vec::new();
     if ev.has_axis(Axis::Vertical) {
-        let (v, v120) = f(Axis::Vertical);
-        res.push(new_relative_event(RelativeAxisCode::REL_WHEEL, -v));
-        res.push(new_relative_event(
-            RelativeAxisCode::REL_WHEEL_HI_RES,
-            -v120,
-        ));
+        let v = scroll_value(Axis::Vertical);
+        res.push(new_relative_event(RelativeAxisCode::REL_WHEEL_HI_RES, -v));
     }
     if ev.has_axis(Axis::Horizontal) {
-        let (v, v120) = f(Axis::Horizontal);
-        res.push(new_relative_event(RelativeAxisCode::REL_HWHEEL, v));
-        res.push(new_relative_event(
-            RelativeAxisCode::REL_HWHEEL_HI_RES,
-            v120,
-        ));
+        let v = scroll_value(Axis::Horizontal);
+        res.push(new_relative_event(RelativeAxisCode::REL_HWHEEL_HI_RES, v));
     }
     res
 }
 
 fn convert_scroll_event(ev: &impl PointerScrollEvent) -> Vec<InputEvent> {
-    dispatch_scroll_event(ev, |axis| {
-        (ev.scroll_value(axis), ev.scroll_value(axis) * 120.0)
-    })
+    dispatch_scroll_event(ev, |axis| ev.scroll_value(axis))
 }
 
 fn convert_wheel_event(ev: &PointerScrollWheelEvent) -> Vec<InputEvent> {
-    dispatch_scroll_event(ev, |axis| {
-        (ev.scroll_value(axis), ev.scroll_value_v120(axis))
-    })
+    dispatch_scroll_event(ev, |axis| ev.scroll_value_v120(axis))
 }
 
 fn convert_button(ev: &PointerButtonEvent, cfg: &config::Device) -> Vec<InputEvent> {
