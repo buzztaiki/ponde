@@ -6,6 +6,7 @@ use std::rc::Rc;
 use input::Event;
 use input::event::{DeviceEvent, EventTrait};
 use input::{Libinput, LibinputInterface};
+use log::info;
 use nix::poll::{PollFd, PollFlags, PollTimeout, poll};
 
 use crate::config::Config;
@@ -65,7 +66,7 @@ impl<'a> App<'a> {
 
         match event {
             Event::Device(DeviceEvent::Added(_)) => {
-                eprintln!(
+                info!(
                     "grab matched device: {} ({})",
                     device.sysname(),
                     device.name()
