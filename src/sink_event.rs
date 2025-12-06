@@ -31,9 +31,15 @@ impl SinkEvent {
                 new_absolute_event(AbsoluteAxisCode::ABS_Y, ev.absolute_y()),
             ])),
             PointerEvent::Button(ev) => Ok(Self(convert_button(ev, device_config))),
-            PointerEvent::ScrollWheel(ev) => Ok(Self(convert_wheel_event(ev))),
-            PointerEvent::ScrollFinger(ev) => Ok(Self(convert_scroll_event(ev))),
-            PointerEvent::ScrollContinuous(ev) => Ok(Self(convert_scroll_event(ev))),
+            PointerEvent::ScrollWheel(ev) => {
+                Ok(Self(convert_wheel_scroll_event(ev, device_config)))
+            }
+            PointerEvent::ScrollFinger(ev) => {
+                Ok(Self(convert_motion_scroll_event(ev, device_config)))
+            }
+            PointerEvent::ScrollContinuous(ev) => {
+                Ok(Self(convert_motion_scroll_event(ev, device_config)))
+            }
             #[allow(deprecated)]
             PointerEvent::Axis(_) => {
                 // We should ignore axis event when to handle scroll events.
@@ -69,26 +75,35 @@ fn new_button_event(button: u16, state: ButtonState) -> InputEvent {
 
 fn dispatch_scroll_event(
     ev: &impl PointerScrollEvent,
+    scroll_factor: &config::ScrollFactorPair,
     scroll_value: impl Fn(Axis) -> f64,
 ) -> Vec<InputEvent> {
     let mut res = Vec::new();
     if ev.has_axis(Axis::Vertical) {
-        let v = scroll_value(Axis::Vertical);
+        let v = scroll_value(Axis::Vertical) * scroll_factor.vertical.value();
         res.push(new_relative_event(RelativeAxisCode::REL_WHEEL_HI_RES, -v));
     }
     if ev.has_axis(Axis::Horizontal) {
-        let v = scroll_value(Axis::Horizontal);
+        let v = scroll_value(Axis::Horizontal) * scroll_factor.horizontal.value();
         res.push(new_relative_event(RelativeAxisCode::REL_HWHEEL_HI_RES, v));
     }
     res
 }
 
-fn convert_scroll_event(ev: &impl PointerScrollEvent) -> Vec<InputEvent> {
-    dispatch_scroll_event(ev, |axis| ev.scroll_value(axis))
+fn convert_motion_scroll_event(
+    ev: &impl PointerScrollEvent,
+    cfg: &config::Device,
+) -> Vec<InputEvent> {
+    dispatch_scroll_event(ev, &cfg.motion_scroll_factor, |axis| ev.scroll_value(axis))
 }
 
-fn convert_wheel_event(ev: &PointerScrollWheelEvent) -> Vec<InputEvent> {
-    dispatch_scroll_event(ev, |axis| ev.scroll_value_v120(axis))
+fn convert_wheel_scroll_event(
+    ev: &PointerScrollWheelEvent,
+    cfg: &config::Device,
+) -> Vec<InputEvent> {
+    dispatch_scroll_event(ev, &cfg.wheel_scroll_factor, |axis| {
+        ev.scroll_value_v120(axis)
+    })
 }
 
 fn convert_button(ev: &PointerButtonEvent, cfg: &config::Device) -> Vec<InputEvent> {
