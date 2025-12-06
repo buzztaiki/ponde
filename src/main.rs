@@ -12,6 +12,7 @@ mod config;
 mod default_libinput_interface;
 mod device_fd;
 mod errors;
+mod inspect_event;
 mod sink_device;
 mod sink_event;
 
