@@ -32,13 +32,13 @@ impl Default for ScrollFactor {
 #[error("scroll factor must be a positive finite number")]
 pub struct TryFromFloatError();
 
-#[derive(Debug, Deserialize, Default, PartialEq)]
 /// Scroll speed factor vertical/horizontal pair.
+#[derive(Debug, Deserialize, Default, PartialEq)]
 pub struct ScrollFactorPair {
-    /// vertical scroll speed factor.
+    /// Vertical scroll speed factor.
     #[serde(default)]
     pub vertical: ScrollFactor,
-    /// horizontal scroll speed factor.
+    /// Horizontal scroll speed factor.
     #[serde(default)]
     pub horizontal: ScrollFactor,
 }

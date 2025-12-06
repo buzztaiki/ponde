@@ -42,11 +42,11 @@ pub struct Device {
     /// Enables or disables the scroll button lock. If enabled, the `scroll_button` is considered logically down after the first click and remains down until the second click of that button. If disabled (the default), the `scroll_button` is considered logically down while held down and up once physically released.
     pub scroll_button_lock: Option<bool>,
 
-    /// Sets the wheel scroll speed factor. You can control wheel scroll speed to change this value.
+    /// Sets the wheel scroll speed factor for vertical and horizontal scrolling.
     #[serde(default)]
     pub wheel_scroll_factor: ScrollFactorPair,
 
-    /// Sets the motion scroll (with scroll_button) speed factor. You can control motion scroll speed to change this value.
+    /// Sets the motion scroll speed factor for vertical and horizontal scrolling (used with `scroll_button`).
     #[serde(default)]
     pub motion_scroll_factor: ScrollFactorPair,
 }
