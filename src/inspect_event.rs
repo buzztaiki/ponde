@@ -1,9 +1,25 @@
 use evdev::{EvdevEnum, KeyCode};
 use input::event::{
     PointerEvent,
-    pointer::{Axis, PointerScrollEvent},
+    pointer::{Axis, PointerScrollEvent, PointerScrollWheelEvent},
 };
 pub(crate) use input::{Event, event::EventTrait};
+
+fn scroll_value(e: &impl PointerScrollEvent, ax: Axis) -> f64 {
+    if e.has_axis(ax) {
+        e.scroll_value(ax)
+    } else {
+        0.0
+    }
+}
+
+fn scroll_value_v120(e: &PointerScrollWheelEvent, ax: Axis) -> f64 {
+    if e.has_axis(ax) {
+        e.scroll_value_v120(ax)
+    } else {
+        0.0
+    }
+}
 
 pub fn inspect_event(event: &Event) -> Option<String> {
     let device = event.device();
@@ -35,20 +51,20 @@ pub fn inspect_event(event: &Event) -> Option<String> {
                 ),
                 PointerEvent::ScrollWheel(e) => format!(
                     "ScrollWheel({}/{}, v120={}/{})",
-                    e.scroll_value(Axis::Horizontal),
-                    e.scroll_value(Axis::Vertical),
-                    e.scroll_value_v120(Axis::Horizontal),
-                    e.scroll_value_v120(Axis::Vertical),
+                    scroll_value(e, Axis::Horizontal),
+                    scroll_value(e, Axis::Vertical),
+                    scroll_value_v120(e, Axis::Horizontal),
+                    scroll_value_v120(e, Axis::Vertical),
                 ),
                 PointerEvent::ScrollFinger(e) => format!(
                     "ScrollFinger({}/{})",
-                    e.scroll_value(Axis::Horizontal),
-                    e.scroll_value(Axis::Vertical)
+                    scroll_value(e, Axis::Horizontal),
+                    scroll_value(e, Axis::Vertical),
                 ),
                 PointerEvent::ScrollContinuous(e) => format!(
                     "ScrollContinuous({}/{})",
-                    e.scroll_value(Axis::Horizontal),
-                    e.scroll_value(Axis::Vertical)
+                    scroll_value(e, Axis::Horizontal),
+                    scroll_value(e, Axis::Vertical),
                 ),
                 _ => format!("{:?}", ev),
             }
