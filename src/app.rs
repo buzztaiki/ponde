@@ -6,12 +6,14 @@ use std::rc::Rc;
 use input::Event;
 use input::event::{DeviceEvent, EventTrait};
 use input::{Libinput, LibinputInterface};
+use log::{debug, info, log_enabled};
 use nix::poll::{PollFd, PollFlags, PollTimeout, poll};
 
 use crate::config::Config;
 use crate::default_libinput_interface::DefaultLibinputInterface;
 use crate::device_fd::{DeviceFd, DeviceFdMap};
 use crate::errors::Error;
+use crate::inspect_event::inspect_event;
 use crate::sink_device::SinkDevice;
 use crate::sink_event::SinkEvent;
 
@@ -54,6 +56,10 @@ impl<'a> App<'a> {
 
     fn handle_event(&mut self, event: &Event) -> Result<(), Error> {
         let mut device = event.device();
+        if let Event::Device(DeviceEvent::Added(_)) = event {
+            debug!("device added: {} ({})", device.sysname(), device.name());
+        }
+
         let device_config = match self.config.matched_device(&(&device).into()) {
             Some(x) => x,
             None => return Ok(()),
@@ -63,9 +69,15 @@ impl<'a> App<'a> {
             return Ok(());
         }
 
+        if log_enabled!(log::Level::Debug)
+            && let Some(x) = inspect_event(event)
+        {
+            debug!("{}", x);
+        }
+
         match event {
             Event::Device(DeviceEvent::Added(_)) => {
-                eprintln!(
+                info!(
                     "grab matched device: {} ({})",
                     device.sysname(),
                     device.name()

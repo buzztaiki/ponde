@@ -12,6 +12,7 @@ mod config;
 mod default_libinput_interface;
 mod device_fd;
 mod errors;
+mod inspect_event;
 mod sink_device;
 mod sink_event;
 
@@ -22,6 +23,11 @@ struct Args {
 }
 
 fn main() -> anyhow::Result<()> {
+    env_logger::Builder::from_env(
+        env_logger::Env::new().default_filter_or(log::Level::Info.as_str()),
+    )
+    .init();
+
     let args = Args::parse();
     let config = Config::load(&args.config_file).context("failed to load config")?;
     let sink_device = SinkDevice::create("ponde").context("failed to create sink device")?;
