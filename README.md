@@ -38,6 +38,8 @@ devices:
     accel_profile: flat
     scroll_button: BTN_SIDE
     scroll_button_lock: true
+    motion_scroll_multiplier:
+      vertical: 4.0
   - match_rule:
       name: "- GameBall"
     accel_profile: flat
