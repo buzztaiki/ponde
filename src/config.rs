@@ -3,6 +3,7 @@ mod button;
 mod device;
 mod device_info;
 mod match_rule;
+mod scroll_factor;
 
 use std::path::Path;
 
@@ -13,6 +14,7 @@ use crate::errors::Error;
 pub use self::button::Button;
 pub use self::device::Device;
 use self::device_info::DeviceInfo;
+pub use self::scroll_factor::ScrollFactorPair;
 
 #[derive(Debug, Default, Deserialize)]
 pub struct Config {
