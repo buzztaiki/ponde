@@ -69,11 +69,11 @@ fn new_button_event(button: u16, state: ButtonState) -> InputEvent {
 
 fn dispatch_scroll_event(
     ev: &impl PointerScrollEvent,
-    f: impl Fn(Axis) -> (f64, f64),
+    scroll_value: impl Fn(Axis) -> (f64, f64),
 ) -> Vec<InputEvent> {
     let mut res = Vec::new();
     if ev.has_axis(Axis::Vertical) {
-        let (v, v120) = f(Axis::Vertical);
+        let (v, v120) = scroll_value(Axis::Vertical);
         res.push(new_relative_event(RelativeAxisCode::REL_WHEEL, -v));
         res.push(new_relative_event(
             RelativeAxisCode::REL_WHEEL_HI_RES,
@@ -81,7 +81,7 @@ fn dispatch_scroll_event(
         ));
     }
     if ev.has_axis(Axis::Horizontal) {
-        let (v, v120) = f(Axis::Horizontal);
+        let (v, v120) = scroll_value(Axis::Horizontal);
         res.push(new_relative_event(RelativeAxisCode::REL_HWHEEL, v));
         res.push(new_relative_event(
             RelativeAxisCode::REL_HWHEEL_HI_RES,
@@ -93,7 +93,10 @@ fn dispatch_scroll_event(
 
 fn convert_scroll_event(ev: &impl PointerScrollEvent) -> Vec<InputEvent> {
     dispatch_scroll_event(ev, |axis| {
-        (ev.scroll_value(axis), ev.scroll_value(axis) * 120.0)
+        // The Linux input subsystem expects the standard REL_WHEEL value to be 1/8th of the hi-resolution value.
+        // Here, we divide the original scroll value by 8.0 for the standard REL_WHEEL event,
+        // and use the original scroll value for the hi-res REL_WHEEL_HI_RES event.
+        (ev.scroll_value(axis) / 8.0, ev.scroll_value(axis))
     })
 }
 
