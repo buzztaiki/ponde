@@ -93,8 +93,10 @@ fn dispatch_scroll_event(
 
 fn convert_scroll_event(ev: &impl PointerScrollEvent) -> Vec<InputEvent> {
     dispatch_scroll_event(ev, |axis| {
-        // `libinput debug-events` reported (15, 120) or (0.25, 2.0) when only the hi-resolution value was transmitted.
-        // We will therefore divide it by 8 to normalize the value.
+        // libinput debug-events tool reported 15/120 (normal/hi-res), 0.12/1.0 or 0.25/2.0 from
+        // ponde's uinput device events when only the hi-resolution value was transmitted. We divide
+        // the hi-resolution value by 8 to match the standard REL_WHEEL units expected by the Linux
+        // input subsystem.
         (ev.scroll_value(axis) / 8.0, ev.scroll_value(axis))
     })
 }
