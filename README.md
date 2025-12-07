@@ -39,7 +39,7 @@ devices:
     scroll_button: BTN_SIDE
     scroll_button_lock: true
     motion_scroll_factor:
-      vertical: 4.0
+      vertical: 0.5
   - match_rule:
       name: "- GameBall"
     accel_profile: flat
@@ -126,6 +126,15 @@ You can avoid this problem by setting the following:
 For gnome:
 ```console
 $ gsettings set org.gnome.desktop.peripherals.mouse accel-profile flat
+```
+
+For hyprland:
+```conf
+# ~/.config/hypr/hyprland.conf
+device {
+    name = ponde
+    accel_profile = flat
+}
 ```
 
 For X11:
