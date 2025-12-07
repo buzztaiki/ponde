@@ -109,10 +109,8 @@ fn convert_motion_scroll_event(
     cfg: &config::Device,
 ) -> Vec<InputEvent> {
     dispatch_scroll_event(ev, &cfg.motion_scroll_factor, |axis| {
-        // The Linux input subsystem expects the standard REL_WHEEL value to be 1/8th of the hi-resolution value.
-        // Here, we divide the original scroll value by 8.0 for the standard REL_WHEEL event,
-        // and use the original scroll value for the hi-res REL_WHEEL_HI_RES event.
-        (ev.scroll_value(axis) / 8.0, ev.scroll_value(axis))
+        // The Linux input subsystem expects the REL_WHEEL_HI_RES value to be 8 times the standard REL_WHEEL value.
+        (ev.scroll_value(axis), ev.scroll_value(axis) * 8.0)
     })
 }
 
