@@ -1,6 +1,6 @@
 [package]
 name = "ponde"
-version = "0.1.6"
+version = "0.2.0"
 edition = "2024"
 description = "Pointing device configuration daemon for Wayland and X11 using libinput and uinput."
 repository = "https://github.com/buzztaiki/ponde"
