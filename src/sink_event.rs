@@ -97,7 +97,6 @@ fn convert_scroll_event(ev: &impl PointerScrollEvent) -> Vec<InputEvent> {
         // Here, we divide the original scroll value by 8.0 for the standard REL_WHEEL event,
         // and use the original scroll value for the hi-res REL_WHEEL_HI_RES event.
         (ev.scroll_value(axis) / 8.0, ev.scroll_value(axis))
-        
     })
 }
 
