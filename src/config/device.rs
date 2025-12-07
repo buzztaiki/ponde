@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use serde::Deserialize;
 
+use crate::config::scroll_factor::ScrollFactorPair;
 use crate::errors::Error;
 
 use super::accel_profile::AccelProfile;
@@ -20,7 +21,8 @@ pub struct Device {
     pub accel_speed: Option<f64>,
 
     /// Sets the logical button mapping for this device.
-    pub button_mapping: Option<HashMap<Button, Button>>,
+    #[serde(default)]
+    pub button_mapping: HashMap<Button, Button>,
 
     /// Enables left-handed button orientation, i.e. swapping left and right buttons.
     pub left_handed: Option<bool>,
@@ -39,6 +41,14 @@ pub struct Device {
 
     /// Enables or disables the scroll button lock. If enabled, the `scroll_button` is considered logically down after the first click and remains down until the second click of that button. If disabled (the default), the `scroll_button` is considered logically down while held down and up once physically released.
     pub scroll_button_lock: Option<bool>,
+
+    /// Sets the wheel scroll speed factor for vertical and horizontal scrolling.
+    #[serde(default)]
+    pub wheel_scroll_factor: ScrollFactorPair,
+
+    /// Sets the motion scroll speed factor for vertical and horizontal scrolling (used with `scroll_button`).
+    #[serde(default)]
+    pub motion_scroll_factor: ScrollFactorPair,
 }
 
 impl Device {
@@ -84,11 +94,7 @@ impl Device {
     }
 
     pub fn map_button(&self, button: Button) -> Button {
-        if let Some(button_mapping) = &self.button_mapping {
-            button_mapping.get(&button).copied().unwrap_or(button)
-        } else {
-            button
-        }
+        self.button_mapping.get(&button).copied().unwrap_or(button)
     }
 
     pub fn matches(&self, device_info: &DeviceInfo) -> bool {

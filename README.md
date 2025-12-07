@@ -38,6 +38,8 @@ devices:
     accel_profile: flat
     scroll_button: BTN_SIDE
     scroll_button_lock: true
+    motion_scroll_factor:
+      vertical: 4.0
   - match_rule:
       name: "- GameBall"
     accel_profile: flat
@@ -66,6 +68,12 @@ devices:
 - `rotation_angle`: Sets the rotation angle of the device to the given angle, in degrees clockwise. The angle must be between 0 (inclusive) and 360 (exclusive).
 - `scroll_button`: Designates a button as scroll button. If the button is logically down, x/y axis movement is converted into scroll events.
 - `scroll_button_lock`: Enables or disables the scroll button lock. If enabled, the `scroll_button` is considered logically down after the first click and remains down until the second click of that button. If disabled (the default), the `scroll_button` is considered logically down while held down and up once physically released.
+- `wheel_scroll_factor`: Sets the wheel scroll speed factor for vertical and horizontal scrolling.
+  - `vertical`: vertical scroll speed factor (float64, must be > 0.0).
+  - `horizontal`: horizontal scroll speed factor (float64, must be > 0.0).
+- `motion_scroll_factor`: Sets the motion scroll speed factor for vertical and horizontal scrolling (used with `scroll_button`).
+  - `vertical`: vertical scroll speed factor (float64, must be > 0.0).
+  - `horizontal`: horizontal scroll speed factor (float64, must be > 0.0).
 
 
 ## Systemd user service
