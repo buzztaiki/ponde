@@ -69,26 +69,40 @@ fn new_button_event(button: u16, state: ButtonState) -> InputEvent {
 
 fn dispatch_scroll_event(
     ev: &impl PointerScrollEvent,
-    scroll_value: impl Fn(Axis) -> f64,
+    scroll_value: impl Fn(Axis) -> (f64, f64),
 ) -> Vec<InputEvent> {
     let mut res = Vec::new();
     if ev.has_axis(Axis::Vertical) {
-        let v = scroll_value(Axis::Vertical);
-        res.push(new_relative_event(RelativeAxisCode::REL_WHEEL_HI_RES, -v));
+        let (v, v120) = scroll_value(Axis::Vertical);
+        res.push(new_relative_event(RelativeAxisCode::REL_WHEEL, -v));
+        res.push(new_relative_event(
+            RelativeAxisCode::REL_WHEEL_HI_RES,
+            -v120,
+        ));
     }
     if ev.has_axis(Axis::Horizontal) {
-        let v = scroll_value(Axis::Horizontal);
-        res.push(new_relative_event(RelativeAxisCode::REL_HWHEEL_HI_RES, v));
+        let (v, v120) = scroll_value(Axis::Horizontal);
+        res.push(new_relative_event(RelativeAxisCode::REL_HWHEEL, v));
+        res.push(new_relative_event(
+            RelativeAxisCode::REL_HWHEEL_HI_RES,
+            v120,
+        ));
     }
     res
 }
 
 fn convert_scroll_event(ev: &impl PointerScrollEvent) -> Vec<InputEvent> {
-    dispatch_scroll_event(ev, |axis| ev.scroll_value(axis))
+    dispatch_scroll_event(ev, |axis| {
+        // `libinput debug-events` reported (15, 120) or (0.25, 2.0) when only the hi-resolution value was transmitted.
+        // We will therefore divide it by 8 to normalize the value.
+        (ev.scroll_value(axis) / 8.0, ev.scroll_value(axis))
+    })
 }
 
 fn convert_wheel_event(ev: &PointerScrollWheelEvent) -> Vec<InputEvent> {
-    dispatch_scroll_event(ev, |axis| ev.scroll_value_v120(axis))
+    dispatch_scroll_event(ev, |axis| {
+        (ev.scroll_value(axis), ev.scroll_value_v120(axis))
+    })
 }
 
 fn convert_button(ev: &PointerButtonEvent, cfg: &config::Device) -> Vec<InputEvent> {
