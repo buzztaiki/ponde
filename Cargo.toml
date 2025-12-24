@@ -20,4 +20,4 @@ thiserror = "2.0.17"
 
 [dev-dependencies]
 serde_test = "1.0.144"
-tempfile = "3.23.0"
+tempfile = "3.24.0"
