@@ -9,7 +9,7 @@ license = "MIT"
 [dependencies]
 anyhow = "1.0.102"
 clap = { version = "4.6.0", features = ["deprecated", "derive"] }
-env_logger = "0.11.9"
+env_logger = "0.11.10"
 evdev = "0.13.2"
 input = "0.9.1"
 log = "0.4.29"
