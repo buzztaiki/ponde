@@ -82,6 +82,16 @@ impl<'a> App<'a> {
                     device.sysname(),
                     device.name()
                 );
+                info!(
+                    "wheel_scroll_factor: vertical={}, horizontal={}",
+                    device_config.wheel_scroll_factor.vertical.value(),
+                    device_config.wheel_scroll_factor.horizontal.value()
+                );
+                info!(
+                    "motion_scroll_factor: vertical={}, horizontal={}",
+                    device_config.motion_scroll_factor.vertical.value(),
+                    device_config.motion_scroll_factor.horizontal.value()
+                );
 
                 device_config.apply_to(&mut device)?;
                 let mut map = self.device_fd_map.borrow_mut();
